@@ -4,12 +4,12 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
-		"build": "powershell scripts/build",
+		"build": "powershell scripts/pack",
 		"compile": "powershell scripts/compile",
 		"watch": "powershell scripts/watch",
 		"build-schema": "powershell scripts/build-schema",
-		"init": "deepkit-type-install",
-		"expand-macro": "powershell scripts/expand-macro"
+		"expand-macro": "powershell scripts/expand-macro",
+        "pack": "powershell scripts/pack"
 	},
 	"author": "zwa73",
 	"license": "ISC",
