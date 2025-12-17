@@ -1,6 +1,6 @@
-﻿{
+{
 	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.43",
+	"version": "1.0.47",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
@@ -9,7 +9,7 @@
 		"build-schema": "powershell scripts/build-schema",
 		"expand-macro": "powershell scripts/expand-macro",
 		"build": "powershell scripts/pack",
-        "release": "powershell scripts/release"
+		"release": "powershell scripts/release"
 	},
 	"repository": "https://github.com/Sosarciel/LaMDA-CommApi-Manager.git",
 	"author": "zwa73",

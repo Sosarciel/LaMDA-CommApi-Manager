@@ -1,4 +1,10 @@
-﻿
+﻿npm run compile
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "编译失败, 停止发布"
+    exit $LASTEXITCODE
+}
+Write-Output 开始发布
+zcli bump
 
 # --- 配置：需要转换的包映射表 ---
 $GitDeps = @{
@@ -21,7 +27,9 @@ try{
             $publishJson = $publishJson -replace $pattern, "`$1$newTarget`$2"
         }
     }
-    Set-Content -Path $pkgPath -Value $publishJson.Trim() -Encoding UTF8
+    # 写入修改后的文本 (完全保留原有的 Tab/空格)
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText((Resolve-Path $pkgPath), $publishJson.Trim(), $utf8NoBom)
 
     scripts/release-tag
 }catch{
@@ -29,6 +37,7 @@ try{
 }finally {
     # 4) 无论成功还是失败，绝对会执行还原
     Write-Host "== 还原原始 package.json ==" -ForegroundColor Green
-    Set-Content -Path $pkgPath -Value $originalJson.Trim() -Encoding UTF8
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText((Resolve-Path $pkgPath), $originalJson.Trim(), $utf8NoBom)
 }
 
