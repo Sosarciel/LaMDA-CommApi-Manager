@@ -23,7 +23,7 @@ try{
     }
     Set-Content -Path $pkgPath -Value $publishJson.Trim() -Encoding UTF8
 
-    scripts/release-github
+    scripts/release-tag
 }catch{
     Write-Error "发布过程中出现错误: $($_.Exception.Message)"
 }finally {
