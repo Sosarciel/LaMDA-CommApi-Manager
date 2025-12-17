@@ -1,2 +1,0 @@
-@discordjs/ws/dist/index.js : 679 ->
-agent: new (require('https-proxy-agent'))('http://127.0.0.1:7890')

@@ -11,6 +11,7 @@
 		"expand-macro": "powershell scripts/expand-macro",
         "pack": "powershell scripts/pack"
 	},
+	"repository": "https://github.com/Sosarciel/LaMDA-CommApi-Manager.git",
 	"author": "zwa73",
 	"license": "ISC",
 	"description": "",
