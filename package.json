@@ -1,37 +1,37 @@
-{
-	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.43",
-	"main": "dist/index.js",
-	"scripts": {
-		"test": "jest",
-		"build": "powershell scripts/pack",
-		"compile": "powershell scripts/compile",
-		"watch": "powershell scripts/watch",
-		"build-schema": "powershell scripts/build-schema",
-		"expand-macro": "powershell scripts/expand-macro",
-        "pack": "powershell scripts/pack"
-	},
-	"repository": "https://github.com/Sosarciel/LaMDA-CommApi-Manager.git",
-	"author": "zwa73",
-	"license": "ISC",
-	"description": "",
-	"files": [
-		"dist",
-		"data",
-		"schema"
-	],
-	"dependencies": {
-		"@sosraciel-lamda/kook-protoclient": "^1.0.3",
-		"@sosraciel-lamda/onebot11-protoclient": "^1.0.10",
-		"@zwa73/audio-utils": "^1.0.24",
-		"@zwa73/js-utils": "^1.0.47",
-		"@zwa73/service-manager": "^1.0.20",
-		"@zwa73/utils": "^1.0.248",
-		"discord.js": "14.21.0",
-		"node-telegram-bot-api": "0.66.0",
-		"undici": "6.21.3"
-	},
-	"devDependencies": {
-		"@types/node-telegram-bot-api": "^0.64.10"
-	}
+﻿{
+    "name":  "@sosraciel-lamda/commapi-manager",
+    "version":  "1.0.43",
+    "main":  "dist/index.js",
+    "scripts":  {
+                    "test":  "jest",
+                    "compile":  "powershell scripts/compile",
+                    "watch":  "powershell scripts/watch",
+                    "build-schema":  "powershell scripts/build-schema",
+                    "expand-macro":  "powershell scripts/expand-macro",
+                    "build":  "powershell scripts/pack",
+                    "release":  "powershell scripts/release"
+                },
+    "repository":  "https://github.com/Sosarciel/LaMDA-CommApi-Manager.git",
+    "author":  "zwa73",
+    "license":  "ISC",
+    "description":  "",
+    "files":  [
+                  "dist",
+                  "data",
+                  "schema"
+              ],
+    "dependencies":  {
+                         "@sosraciel-lamda/kook-protoclient":  "github:Sosarciel/LaMDA-KOOK-ProtoClient#latest",
+                         "@sosraciel-lamda/onebot11-protoclient":  "github:Sosarciel/LaMDA-OneBot11-ProtoClient#latest",
+                         "@zwa73/audio-utils":  "^1.0.24",
+                         "@zwa73/js-utils":  "^1.0.47",
+                         "@zwa73/service-manager":  "^1.0.20",
+                         "@zwa73/utils":  "^1.0.248",
+                         "discord.js":  "14.21.0",
+                         "node-telegram-bot-api":  "0.66.0",
+                         "undici":  "6.21.3"
+                     },
+    "devDependencies":  {
+                            "@types/node-telegram-bot-api":  "^0.64.10"
+                        }
 }
