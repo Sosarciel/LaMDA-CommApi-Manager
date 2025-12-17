@@ -1,15 +1,15 @@
-{
+﻿{
 	"name": "@sosraciel-lamda/commapi-manager",
 	"version": "1.0.43",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
-		"build": "powershell scripts/pack",
 		"compile": "powershell scripts/compile",
 		"watch": "powershell scripts/watch",
 		"build-schema": "powershell scripts/build-schema",
 		"expand-macro": "powershell scripts/expand-macro",
-        "pack": "powershell scripts/pack"
+		"build": "powershell scripts/pack",
+        "release": "powershell scripts/release"
 	},
 	"repository": "https://github.com/Sosarciel/LaMDA-CommApi-Manager.git",
 	"author": "zwa73",
@@ -35,3 +35,6 @@
 		"@types/node-telegram-bot-api": "^0.64.10"
 	}
 }
+
+
+
