@@ -3,4 +3,3 @@ dist/**
 build/**
 test.js
 release
-release/**
