@@ -60,64 +60,30 @@ export declare const ListenToolBase: {
                 sourceSet: string[];
             }) => void>[] | undefined;
         };
-        registerEvent<T extends "message">(eventType: T, partialEvent: Pick<Exclude<{
-            message?: import("@zwa73/utils").EventData<"message", (data: {
-                /**消息内容文本 */
-                content: string;
-                /**用户id */
-                userId: string;
-                /**对话归属id 指定消息将要投递的目标位置 */
-                channelId: string;
-                /**消息来源标识符组 */
-                sourceSet: string[];
-            }) => void>[] | undefined;
-        }[T], undefined>[number], "handler"> & Partial<Exclude<{
-            message?: import("@zwa73/utils").EventData<"message", (data: {
-                /**消息内容文本 */
-                content: string;
-                /**用户id */
-                userId: string;
-                /**对话归属id 指定消息将要投递的目标位置 */
-                channelId: string;
-                /**消息来源标识符组 */
-                sourceSet: string[];
-            }) => void>[] | undefined;
-        }[T], undefined>[number]>): Exclude<{
-            message?: import("@zwa73/utils").EventData<"message", (data: {
-                /**消息内容文本 */
-                content: string;
-                /**用户id */
-                userId: string;
-                /**对话归属id 指定消息将要投递的目标位置 */
-                channelId: string;
-                /**消息来源标识符组 */
-                sourceSet: string[];
-            }) => void>[] | undefined;
-        }[T], undefined>[number];
-        unregisterEvent<T extends "message">(eventType: T, id: string): Exclude<{
-            message?: import("@zwa73/utils").EventData<"message", (data: {
-                /**消息内容文本 */
-                content: string;
-                /**用户id */
-                userId: string;
-                /**对话归属id 指定消息将要投递的目标位置 */
-                channelId: string;
-                /**消息来源标识符组 */
-                sourceSet: string[];
-            }) => void>[] | undefined;
-        }[T], undefined>[number] | undefined;
-        invokeEvent<T extends "message">(eventType: T, ...data: Parameters<Exclude<{
-            message?: import("@zwa73/utils").EventData<"message", (data: {
-                /**消息内容文本 */
-                content: string;
-                /**用户id */
-                userId: string;
-                /**对话归属id 指定消息将要投递的目标位置 */
-                channelId: string;
-                /**消息来源标识符组 */
-                sourceSet: string[];
-            }) => void>[] | undefined;
-        }[T], undefined>[number]["handler"]>): undefined;
+        registerEvent<T extends "message">(eventType: T, partialEvent: Pick<{
+            handler: ListenerEventTable[T];
+            eventType: T;
+            id: string;
+            weight: number;
+        }, "handler"> & Partial<{
+            handler: ListenerEventTable[T];
+            eventType: T;
+            id: string;
+            weight: number;
+        }>): {
+            handler: ListenerEventTable[T];
+            eventType: T;
+            id: string;
+            weight: number;
+        };
+        unregisterEvent<T extends "message">(eventType: T, id: string): {
+            handler: ListenerEventTable[T];
+            eventType: T;
+            id: string;
+            weight: number;
+        } | undefined;
+        invokeEvent<T extends "message">(eventType: T, ...data: Parameters<ListenerEventTable[T]>): ReturnType<ListenerEventTable[T]> extends Promise<any> ? import("@zwa73/utils").MPromise<void> : void;
+        cascadeEvent<T extends never>(eventType: T, ...data: Parameters<ListenerEventTable[T]>): ReturnType<ListenerEventTable[T]>;
     };
 };
 /**基础接口数据 */

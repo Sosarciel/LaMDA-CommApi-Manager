@@ -21,12 +21,8 @@ export declare const CommApiManager: ServiceManager<{
     OneBot: (table: OneBotServiceData) => OneBotApi;
     KOOK: (table: KOOKServiceData) => KOOKApi;
 }> & {
-    initInject(opt: CommApiManagerOption): ServiceManager<{
-        Telegram: (table: TelegramServiceData) => TelegramApi;
-        Discord: (table: DiscordServiceData) => DiscordApi;
-        OneBot: (table: OneBotServiceData) => OneBotApi;
-        KOOK: (table: KOOKServiceData) => KOOKApi;
-    }>;
+    initInject: (opt: CommApiManagerOption) => void;
+    waitInitInject: () => Promise<void>;
 };
 export type CommApiManager = typeof CommApiManager;
 export {};
