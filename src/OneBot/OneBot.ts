@@ -64,11 +64,12 @@ export class OneBotApi extends ListenToolBase implements BaseCommInterface{
             const rolme = message.indexOf(`(rol)${self_id}(rol)`) > -1;
             const atme = rolme || qqatme || data.without_at;
             if (!atme) return;
-            if (message.includes("CQ") || message.includes("cq") || message.length < 2)
-                return;
 
             //处理消息
             const fixedMsg = getTrans(message);
+            if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
+                return;
+
             SLogger.http(
                 `OneBotApi ${self_id} 接收 GroupMessage:\n` +
                 `message: ${message}\n` +
@@ -95,11 +96,12 @@ export class OneBotApi extends ListenToolBase implements BaseCommInterface{
 
             // 跳过其他目标
             if (`${self_id}` != data.self_id) return;
-            if (message.includes("CQ") || message.includes("cq") || message.length < 2)
-                return;
 
             //处理消息
             const fixedMsg = getTrans(message);
+            if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
+                return;
+
             SLogger.http(`OneBotApi ${self_id} 接收 PrivateMessage:\n` +
                 `message: ${message}\n` +
                 `fixedMsg: ${fixedMsg}\n` +
