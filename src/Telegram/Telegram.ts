@@ -70,7 +70,7 @@ export class TelegramApi extends ListenToolBase implements BaseCommInterface{
             const opt:TelegramBot.SendMessageOptions = {
                 reply_markup:{
                     keyboard: [
-                        [{text:'cmd:changechoice'},{text:'cmd:changechoice next'},{text:'cmd:getpreid'}],
+                        [{text:'cmd:changechoice prev'},{text:'cmd:changechoice next'},{text:'cmd:getpreid'}],
                         [{text:'cmd:getaudio'},{text:'cmd:save'}],
                     ],
                     resize_keyboard: true,
