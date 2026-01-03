@@ -22,8 +22,8 @@ type CommApiManagerJsonTable = ServiceManagerBaseConfig & {
 };
 
 type CommApiManagerOption = {
-    /**配置文件路径 */
-    tablePath   :string;
+    /**配置文件路径或配置表 */
+    configTable :string|CommApiManagerJsonTable;
     /**缓存文件夹目录
      * 将会存入一些音频缓存
      */
@@ -38,7 +38,7 @@ export const CommApiManager = UtilFunc.createInjectable({
         AudioCache.CACHE_PATH = opt.cacheDir;
         InjectTool.inject(opt.inject);
         const mgr = ServiceManager.from({
-            cfgPath:opt.tablePath,
+            configTable:opt.configTable,
             ctorTable:CtorTable,
         });
         return mgr;
