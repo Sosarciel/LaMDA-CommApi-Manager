@@ -1,7 +1,7 @@
 import { ServiceConfig, ServiceManager, ServiceManagerBaseConfig } from "@zwa73/service-manager";
 import { TelegramServiceData, TelegramApi } from "./Telegram";
 import { DiscordApi, DiscordServiceData } from "./Discord";
-import { UtilFunc } from "@zwa73/utils";
+import { DataStore, UtilFunc } from "@zwa73/utils";
 import { AudioCache, InjectData, InjectTool } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
@@ -23,7 +23,7 @@ type CommApiManagerJsonTable = ServiceManagerBaseConfig & {
 
 type CommApiManagerOption = {
     /**配置文件路径或配置表 */
-    configTable :string|CommApiManagerJsonTable;
+    serviceTable :DataStore<CommApiManagerJsonTable>;
     /**缓存文件夹目录
      * 将会存入一些音频缓存
      */
@@ -38,7 +38,7 @@ export const CommApiManager = UtilFunc.createInjectable({
         AudioCache.CACHE_PATH = opt.cacheDir;
         InjectTool.inject(opt.inject);
         const mgr = ServiceManager.from({
-            configTable:opt.configTable,
+            configTable:opt.serviceTable,
             ctorTable:CtorTable,
         });
         return mgr;

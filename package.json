@@ -1,6 +1,6 @@
 {
 	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.55",
+	"version": "1.0.56",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
@@ -25,8 +25,8 @@
 		"@sosraciel-lamda/onebot11-protoclient": "^1.0.10",
 		"@zwa73/audio-utils": "^1.0.24",
 		"@zwa73/js-utils": "^1.0.74",
-		"@zwa73/service-manager": "^1.0.26",
-		"@zwa73/utils": "^1.0.280",
+		"@zwa73/service-manager": "^1.0.27",
+		"@zwa73/utils": "^1.0.282",
 		"discord.js": "14.21.0",
 		"node-telegram-bot-api": "0.66.0",
 		"undici": "6.21.3"
