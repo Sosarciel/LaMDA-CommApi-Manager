@@ -10,7 +10,7 @@ type Subtype = 'kook'|'qq'|'qq_official';
 export type OneBotUserId  = `${Subtype}.user.${string}`;
 export type OneBotGroupId = `${Subtype}.group.${string}`;
 export type OneBotSubtypeId = `onebot.${Subtype}`;
-export type OneBotSource = OneBotUserId | OneBotGroupId | OneBotSubtypeId | 'onebot';
+export type OneBotSource = OneBotUserId | OneBotGroupId | OneBotSubtypeId;
 
 /**OneBot初始化选项 */
 export type OneBotServiceData = {

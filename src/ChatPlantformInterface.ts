@@ -39,16 +39,17 @@ export type SendTool = {
     sendVoice: (arg:SendVoiceArg) => Promise<boolean>;
 }
 
-export type AnySource = DiscordSource|TelegramSource|KOOKSource|OneBotSource;
+export type AnyCommSource = DiscordSource|TelegramSource|KOOKSource|OneBotSource;
+export type AnyCommSourceWithType = AnyCommSource|'kook'|'onebot'|'discord'|'telegram';
 export type MessageEventData = {
     /**消息内容文本 */
     content:string;
     /**用户id */
-    userId:string;
+    userId:AnyCommSource;
     /**对话归属id 指定消息将要投递的目标位置 */
-    channelId:string;
+    channelId:AnyCommSource;
     /**消息来源标识符组 */
-    sourceSet:AnySource[];
+    sourceSet:AnyCommSourceWithType[];
 }
 /**基础监听器事件表 */
 export type ListenerEventTable ={

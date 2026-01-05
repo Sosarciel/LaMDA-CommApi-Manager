@@ -1,6 +1,6 @@
 import { CardMessage, KOOKWebsocketClient } from "@sosraciel-lamda/kook-protoclient";
 import { BaseCommInterface, ListenToolBase, SendMessageArg, SendVoiceArg } from "../ChatPlantformInterface";
-import { KOOKServiceData } from "./Interface";
+import { KOOKChannelId, KOOKGuildId, KOOKServiceData, KOOKUserId } from "./Interface";
 import { SLogger } from "@zwa73/utils";
 
 
@@ -59,9 +59,9 @@ export class KOOKApi extends ListenToolBase implements BaseCommInterface{
                 `guild_id: ${guild_id}`
             );
 
-            const fixedUserId  = `kook.user.${author_id}`;
-            const fixedGuildId = `kook.guild.${guild_id}`;
-            const fixedChannelId = `kook.channel.${target_id}`;
+            const fixedUserId:KOOKUserId  = `kook.user.${author_id}`;
+            const fixedGuildId:KOOKGuildId = `kook.guild.${guild_id}`;
+            const fixedChannelId:KOOKChannelId = `kook.channel.${target_id}`;
             this.invokeEvent('message',{
                 content   : fixedMsg,
                 userId    : fixedUserId,
@@ -88,7 +88,7 @@ export class KOOKApi extends ListenToolBase implements BaseCommInterface{
                 `author_id: ${author_id}`
             );
 
-            const fixedUserId  = `kook.user.${author_id}`;
+            const fixedUserId:KOOKUserId  = `kook.user.${author_id}`;
             this.invokeEvent('message',{
                 content   : fixedMsg,
                 userId    : fixedUserId,
