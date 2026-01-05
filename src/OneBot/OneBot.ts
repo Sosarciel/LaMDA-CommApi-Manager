@@ -22,8 +22,8 @@ const initListener = (port:number)=>{
 type Table = OneBotListener['_table'];
 
 // self_id -> 事件 表
-// 用于在多self_id共用同端口监听器时直接路由触发事件
-// 避免多播 即避免 N个self_id的实例在创建时多次在监听器上注册事件 再判断self_id==data.self_id的方式过滤的指数开销
+// 用于在多self_id共用同端口监听器时直接使用self_id路由触发事件
+// 避免多播 即避免 N个self_id的实例在创建时多次在监听器上注册事件,再各自以self_id==data.self_id过滤的 O(N) 级开销
 const SelfIdEventTable:Record<string,{
     [K in keyof Table]?:NonNullable<Table[K]>[number]['handler']
 }> = {};
