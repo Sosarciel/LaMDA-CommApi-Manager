@@ -5,7 +5,7 @@ import { DataStore, EventSystem, SLogger, UtilFunc } from "@zwa73/utils";
 import { AudioCache, InjectData, InjectTool } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
-import { AnyCommType, MessageEventData, CommApiSendTool } from "./ChatPlantformInterface";
+import { AnyCommType, MessageEventData } from "./ChatPlantformInterface";
 
 
 const CtorTable = {
@@ -36,7 +36,7 @@ type CommApiManagerOption = {
 /**基础监听器事件表 */
 export type CommApiManagerListenerEventTable ={
     /**文本消息事件 */
-    message:(data:MessageEventData&{sendTool:CommApiSendTool})=>void;
+    message:(data:MessageEventData&{instancePack:Pack})=>void;
 }
 type Pack = Exclude<Awaited<ReturnType<ServiceManager<CtorTable>['getService']>>,undefined>;
 class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
@@ -51,18 +51,17 @@ class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
             ctorTable:CtorTable,
         });
         ins.bindRef(mgr);
-        return mgr;
+        return ins;
     }
     async bindRef(ref:ServiceManager<CtorTable>){
         await this.unbindRef();
         this.ref = ref;
-        const bindFunc=(serviceType:AnyCommType)=> (pack:Pack)=>{
-                const {instance,name} = pack;
+        const bindFunc=(serviceType:AnyCommType)=> (instancePack:Pack)=>{
+                const {instance,name} = instancePack;
                 instance.registerEvent('message',{handler:async (data)=>{
                     try{
                         await this.invokeEvent('message',{
-                            ...data,
-                            sendTool:instance
+                            ...data, instancePack
                         });
                     }catch(e){
                         SLogger.warn(`CommApiManagerBridge 事件处理错误 服务:${name} 错误:`,e);
