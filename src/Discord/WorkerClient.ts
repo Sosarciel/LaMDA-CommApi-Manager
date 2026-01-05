@@ -1,14 +1,14 @@
-import { AttachmentBuilder, Channel, Client, Events, GatewayIntentBits, Message, Partials } from "discord.js";
+import { AttachmentBuilder, Client, Events, GatewayIntentBits, Message, Partials } from "discord.js";
 import { ProxyAgent } from "undici";
 import fs from 'fs';
-import { parentPort,workerData } from "worker_threads";
+import { parentPort, workerData } from "worker_threads";
 import { Bridge, BridgeInterface } from "@zwa73/utils";
 import type { DiscordChannelId, DiscordGuildId, DiscordServiceData, DiscordUserId, DiscordWorkerServerInterface } from "./Interface";
-import type { SendMessageArg, SendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import type { SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
 
 
 /**Discord接口 */
-class DiscordWorkerClient implements SendTool{
+class DiscordWorkerClient implements CommApiSendTool{
     charname:string;
     token:string;
     proxyUrl?:string;

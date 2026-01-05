@@ -1,6 +1,6 @@
 import { assertType } from "@zwa73/utils";
 import { KookActiveSendToolCtor, QQOfficialActiveSendToolCtor, QQActiveSendToolCtor } from "./ActivateSendTool";
-import { SendTool } from "@/src/ChatPlantformInterface";
+import { CommApiSendTool } from "@/src/ChatPlantformInterface";
 
 
 
@@ -46,6 +46,6 @@ export const SubtypeDefineTable = {
 
 export type SubtypeDefine = {
     flag:Subtype;
-    astCtor:(port:number)=>SendTool;
+    astCtor:(port:number)=>CommApiSendTool;
 }
 assertType<Record<Subtype,SubtypeDefine>>(SubtypeDefineTable);

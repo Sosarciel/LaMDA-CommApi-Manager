@@ -1,5 +1,5 @@
 import { LogLevel } from "@zwa73/utils";
-import { ListenTool } from "../ChatPlantformInterface";
+import { CommApiListenTool } from "../ChatPlantformInterface";
 
 /**Discord初始化选项 */
 export type DiscordServiceData = {
@@ -21,5 +21,5 @@ export type DiscordSource = DiscordUserId | DiscordGuildId | DiscordChannelId;
 
 export type DiscordWorkerServerInterface = {
     log(level:LogLevel,message:string):void;
-    invokeEvent:ListenTool['invokeEvent'];
+    invokeEvent:CommApiListenTool['invokeEvent'];
 };

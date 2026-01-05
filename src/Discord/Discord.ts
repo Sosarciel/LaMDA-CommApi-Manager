@@ -2,7 +2,7 @@ import { Bridge, BridgeInterface, LogLevel, PRecord, sleep, SLogger } from "@zwa
 import { Worker } from "worker_threads";
 import { DiscordServiceData, DiscordWorkerServerInterface } from "./Interface";
 import path from "path";
-import { BaseCommInterface, ListenToolBase, SendMessageArg, SendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import { BaseCommInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
 import { AudioCache } from "../Utils";
 
 
@@ -19,11 +19,11 @@ const unwarpId = (text?:string) =>{
 
 
 /**Discord接口 */
-export class DiscordApi extends ListenToolBase implements BaseCommInterface,DiscordWorkerServerInterface{
+export class DiscordApi extends CommApiListenToolBase implements BaseCommInterface,DiscordWorkerServerInterface{
     worker?:Worker;
     taskMap:PRecord<string,(arg:boolean)=>void> = {};
     charname:string;
-    bridge?:BridgeInterface<SendTool>;
+    bridge?:BridgeInterface<CommApiSendTool>;
 
     constructor(public data:DiscordServiceData){
         super();
@@ -32,7 +32,7 @@ export class DiscordApi extends ListenToolBase implements BaseCommInterface,Disc
     }
     startWorker() {
         this.worker = new Worker(path.join(__dirname,'WorkerClient.js'),{workerData:this.data});
-        this.bridge = Bridge.create<SendTool>({
+        this.bridge = Bridge.create<CommApiSendTool>({
             client:this,
             send:(data)=>this.worker?.postMessage(data),
             init:(onData)=>this.worker?.on('message',onData),

@@ -1,5 +1,5 @@
 import { OneBotListener } from "@sosraciel-lamda/onebot11-protoclient";
-import { BaseCommInterface, ListenToolBase, SendMessageArg, SendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import { BaseCommInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
 import { OneBotGroupId, OneBotServiceData, OneBotSubtypeId, OneBotUserId, SubtypeDefine, SubtypeDefineTable } from "./Interface";
 import { SLogger, UtilCodec } from "@zwa73/utils";
 
@@ -35,8 +35,8 @@ function getTrans(msg: string) {
     return msg;
 }
 
-export class OneBotApi extends ListenToolBase implements BaseCommInterface{
-    ast:SendTool;
+export class OneBotApi extends CommApiListenToolBase implements BaseCommInterface{
+    ast:CommApiSendTool;
     charname: string;
     sub:SubtypeDefine;
     constructor(public data:OneBotServiceData) {

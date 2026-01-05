@@ -1,13 +1,12 @@
 import { UtilFunc, match } from "@zwa73/utils";
 import { OneBotSender, CQCodeTool } from "@sosraciel-lamda/onebot11-protoclient";
-import { FfmpegTool } from "@zwa73/audio-utils";
 import { chkType } from "./Utils";
-import { SendMessageArg, SendVoiceArg, SendTool } from "@/src/ChatPlantformInterface";
-import { AudioCache, InjectTool } from "@/src/Utils";
+import { SendMessageArg, SendVoiceArg, CommApiSendTool } from "@/src/ChatPlantformInterface";
+import { AudioCache } from "@/src/Utils";
 
 
 
-export const QQOfficialActiveSendToolCtor = (port:number):SendTool=>{
+export const QQOfficialActiveSendToolCtor = (port:number):CommApiSendTool=>{
     const sender = new OneBotSender('127.0.0.1', port);
     return {
         async sendMessage(params:SendMessageArg): Promise<boolean> {

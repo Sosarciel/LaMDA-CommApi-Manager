@@ -1,4 +1,4 @@
-import { SendMessageArg, SendTool, SendVoiceArg } from "@/src/ChatPlantformInterface";
+import { SendMessageArg, CommApiSendTool, SendVoiceArg } from "@/src/ChatPlantformInterface";
 import { CQCodeTool, OneBotSender } from "@sosraciel-lamda/onebot11-protoclient";
 import { chkType } from "./Utils";
 import { match, sleep, SLogger, UtilFT } from "@zwa73/utils";
@@ -8,7 +8,7 @@ import fs from 'fs';
 
 
 
-export const KookActiveSendToolCtor = (port:number):SendTool=>{
+export const KookActiveSendToolCtor = (port:number):CommApiSendTool=>{
     const sender = new OneBotSender('127.0.0.1', port);
 
     return {

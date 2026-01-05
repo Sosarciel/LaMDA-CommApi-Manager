@@ -2,7 +2,7 @@ import { UtilFunc, match } from "@zwa73/utils";
 import { OneBotSender, CQCodeTool } from "@sosraciel-lamda/onebot11-protoclient";
 import { FfmpegTool } from "@zwa73/audio-utils";
 import { chkType } from "./Utils";
-import { SendMessageArg, SendVoiceArg, SendTool } from "@/src/ChatPlantformInterface";
+import { SendMessageArg, SendVoiceArg, CommApiSendTool } from "@/src/ChatPlantformInterface";
 import { AudioCache, InjectTool } from "@/src/Utils";
 
 
@@ -71,7 +71,7 @@ const clipMessage = (text: string, maxLength: number): string[] =>{
  * @param respPort - 端口号
  * @param sendType - 类型 "group_message" 或 "private_message"
  */
-export const QQActiveSendToolCtor = (port:number):SendTool=>{
+export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
     const sender = new OneBotSender('127.0.0.1', port);
     return {
         async sendMessage(params:SendMessageArg): Promise<boolean>{

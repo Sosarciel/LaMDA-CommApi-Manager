@@ -1,5 +1,5 @@
 import { CardMessage, KOOKWebsocketClient } from "@sosraciel-lamda/kook-protoclient";
-import { BaseCommInterface, ListenToolBase, SendMessageArg, SendVoiceArg } from "../ChatPlantformInterface";
+import { BaseCommInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg } from "../ChatPlantformInterface";
 import { KOOKChannelId, KOOKGuildId, KOOKServiceData, KOOKUserId } from "./Interface";
 import { SLogger } from "@zwa73/utils";
 
@@ -21,7 +21,7 @@ const getTrans = (txt:string)=>{
 }
 
 
-export class KOOKApi extends ListenToolBase implements BaseCommInterface{
+export class KOOKApi extends CommApiListenToolBase implements BaseCommInterface{
     charname: string;
     client:KOOKWebsocketClient;
     constructor(public data:KOOKServiceData) {

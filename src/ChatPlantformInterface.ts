@@ -26,7 +26,7 @@ export type SendVoiceArg =  SendBaseArg&{
 }
 
 /**发信工具 */
-export type SendTool = {
+export type CommApiSendTool = {
     /**发送文本
      * @param arg  - 发送文本参数
      * @returns 是否成功发送
@@ -40,7 +40,8 @@ export type SendTool = {
 }
 
 export type AnyCommSource = DiscordSource|TelegramSource|KOOKSource|OneBotSource;
-export type AnyCommSourceWithType = AnyCommSource|'kook'|'onebot'|'discord'|'telegram';
+export type AnyCommType = 'kook'|'onebot'|'discord'|'telegram';
+export type AnyCommSourceWithType = AnyCommSource|AnyCommType;
 export type MessageEventData = {
     /**消息内容文本 */
     content:string;
@@ -52,14 +53,16 @@ export type MessageEventData = {
     sourceSet:AnyCommSourceWithType[];
 }
 /**基础监听器事件表 */
-export type ListenerEventTable ={
+export type CommApiListenerEventTable ={
     /**文本消息事件 */
     message:(data:MessageEventData)=>void;
 }
 
 /**监听工具 */
-export type ListenTool = EventSystem<ListenerEventTable>;
-export const ListenToolBase = class extends EventSystem<ListenerEventTable>{isRuning(){return true;}};
+export type CommApiListenTool = EventSystem<CommApiListenerEventTable>;
+export const CommApiListenToolBase = class extends EventSystem<CommApiListenerEventTable>{
+    isRuning(){return true;}
+};
 
 /**基础接口数据 */
 export type BaseData = {
@@ -69,4 +72,4 @@ export type BaseData = {
 
 
 /**基础通讯工具 */
-export type BaseCommInterface = ServiceInterface<ListenTool&SendTool&BaseData>;
+export type BaseCommInterface = ServiceInterface<CommApiListenTool&CommApiSendTool&BaseData>;
