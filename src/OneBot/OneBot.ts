@@ -3,8 +3,30 @@ import { BaseCommInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTo
 import { OneBotGroupId, OneBotServiceData, OneBotSubtypeId, OneBotUserId, SubtypeDefine, SubtypeDefineTable } from "./Interface";
 import { SLogger, UtilCodec } from "@zwa73/utils";
 
-
+//监听器池
 const ListenerPool:Record<string,OneBotListener> = {};
+const initListener = (port:number)=>{
+    if(ListenerPool[port]==null){
+        ListenerPool[port] = new OneBotListener(port);
+
+        const listtener = ListenerPool[port];
+        //设置监听
+        listtener.registerEvent("GroupMessage",{handler:(gdata,qo)=>{
+            SelfIdEventTable[gdata.self_id]?.GroupMessage?.(gdata,qo);
+        }});
+        listtener.registerEvent("PrivateMessage",{handler:(pdata,qo)=>{
+            SelfIdEventTable[pdata.self_id]?.PrivateMessage?.(pdata,qo);
+        }});
+    }
+}
+type Table = OneBotListener['_table'];
+
+// self_id -> 事件 表
+// 用于在多self_id共用同端口监听器时直接路由触发事件
+// 避免多播 即避免 N个self_id的实例在创建时多次在监听器上注册事件 再判断self_id==data.self_id的方式过滤的指数开销
+const SelfIdEventTable:Record<string,{
+    [K in keyof Table]?:NonNullable<Table[K]>[number]['handler']
+}> = {};
 
 const prefixList = Object.values(SubtypeDefineTable).map(v=>v.flag);
 const unwarpRegex = new RegExp(`(${prefixList.join('|')})\\.(user|group)\\.(\\d+)`);
@@ -41,83 +63,86 @@ export class OneBotApi extends CommApiListenToolBase implements BaseCommInterfac
     sub:SubtypeDefine;
     constructor(public data:OneBotServiceData) {
         super();
-        const {listen_port,send_port,subtype,charname} = data;
+        const {listen_port,send_port,subtype,charname,self_id} = data;
         this.charname = charname;
         this.sub = SubtypeDefineTable[subtype];
         this.ast = this.sub.astCtor(send_port);
-        if(ListenerPool[listen_port]==null)
-            ListenerPool[listen_port] = new OneBotListener(listen_port);
 
-        const listtener = ListenerPool[listen_port];
-        //设置监听
-        listtener.registerEvent("GroupMessage",{handler:gdata=>{
-            const {message,user_id,group_id,self_id} = gdata;
-            if(typeof message != "string"){
-                SLogger.warn("OneBotApi GroupMessage 消息类型错误",message);
-                return;
-            }
+        //初始化对应selfid监听器
+        if(SelfIdEventTable[self_id]!=null)
+            SLogger.error(`OneBotApi 初始化监听器时发现重复的self_id, 已覆盖\nself_id: ${self_id} data:`,data);
+        SelfIdEventTable[self_id] = {
+            PrivateMessage:(pdata)=>{
+                const {message,user_id,self_id} = pdata;
+                if(typeof message != "string"){
+                    SLogger.warn("OneBotApi PrivateMessage 消息类型错误",message);
+                    return;
+                }
 
-            // 跳过其他目标
-            if (`${self_id}` != data.self_id) return;
-            // 判断被at
-            const qqatme = message.includes(`[CQ:at,qq=${self_id}`);
-            const rolme = message.indexOf(`(rol)${self_id}(rol)`) > -1;
-            const atme = rolme || qqatme || data.without_at;
-            if (!atme) return;
+                // 跳过其他目标
+                if (`${self_id}` != data.self_id) return;
 
-            //处理消息
-            const fixedMsg = getTrans(message);
-            if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
-                return;
+                //处理消息
+                const fixedMsg = getTrans(message);
+                if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
+                    return;
 
-            SLogger.http(
-                `OneBotApi ${self_id} 接收 GroupMessage:\n` +
-                `message: ${message}\n` +
-                `fixedMsg: ${fixedMsg}\n` +
-                `user_id: ${user_id}\n` +
-                `group_id: ${group_id}`
-            );
+                SLogger.http(`OneBotApi ${self_id} 接收 PrivateMessage:\n` +
+                    `message: ${message}\n` +
+                    `fixedMsg: ${fixedMsg}\n` +
+                    `user_id: ${user_id}`
+                );
 
-            const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
-            const fixedGroupId:OneBotGroupId = `${this.sub.flag}.group.${group_id}`;
-            const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
-            this.invokeEvent('message',{
-                content   : fixedMsg,
-                userId    : fixedUserId,
-                channelId : fixedGroupId,
-                sourceSet : ['onebot',subtypeId,fixedGroupId,fixedUserId]
-            });
-        }});
-        listtener.registerEvent("PrivateMessage",{handler:pdata=>{
-            const {message,user_id,self_id} = pdata;
-            if(typeof message != "string"){
-                SLogger.warn("OneBotApi PrivateMessage 消息类型错误",message);
-                return;
-            }
+                const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
+                const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
+                this.invokeEvent('message',{
+                    content   : fixedMsg,
+                    userId    : fixedUserId,
+                    channelId : fixedUserId,
+                    sourceSet : ['onebot',subtypeId,fixedUserId],
+                });
+            },
+            GroupMessage:(gdata)=>{
+                const {message,user_id,group_id,self_id} = gdata;
+                if(typeof message != "string"){
+                    SLogger.warn("OneBotApi GroupMessage 消息类型错误",message);
+                    return;
+                }
 
-            // 跳过其他目标
-            if (`${self_id}` != data.self_id) return;
+                // 跳过其他目标
+                if (`${self_id}` != data.self_id) return;
+                // 判断被at
+                const qqatme = message.includes(`[CQ:at,qq=${self_id}`);
+                const rolme = message.indexOf(`(rol)${self_id}(rol)`) > -1;
+                const atme = rolme || qqatme || data.without_at;
+                if (!atme) return;
 
-            //处理消息
-            const fixedMsg = getTrans(message);
-            if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
-                return;
+                //处理消息
+                const fixedMsg = getTrans(message);
+                if (fixedMsg.includes("CQ") || fixedMsg.includes("cq") || fixedMsg.length < 2)
+                    return;
 
-            SLogger.http(`OneBotApi ${self_id} 接收 PrivateMessage:\n` +
-                `message: ${message}\n` +
-                `fixedMsg: ${fixedMsg}\n` +
-                `user_id: ${user_id}`
-            );
+                SLogger.http(
+                    `OneBotApi ${self_id} 接收 GroupMessage:\n` +
+                    `message: ${message}\n` +
+                    `fixedMsg: ${fixedMsg}\n` +
+                    `user_id: ${user_id}\n` +
+                    `group_id: ${group_id}`
+                );
 
-            const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
-            const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
-            this.invokeEvent('message',{
-                content   : fixedMsg,
-                userId    : fixedUserId,
-                channelId : fixedUserId,
-                sourceSet : ['onebot',subtypeId,fixedUserId],
-            });
-        }});
+                const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
+                const fixedGroupId:OneBotGroupId = `${this.sub.flag}.group.${group_id}`;
+                const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
+                this.invokeEvent('message',{
+                    content   : fixedMsg,
+                    userId    : fixedUserId,
+                    channelId : fixedGroupId,
+                    sourceSet : ['onebot',subtypeId,fixedGroupId,fixedUserId]
+                });
+            },
+        }
+        //初始化对印端口监听器
+        initListener(listen_port);
     }
     sendMessage(arg: SendMessageArg){
         return this.ast.sendMessage({...arg,
