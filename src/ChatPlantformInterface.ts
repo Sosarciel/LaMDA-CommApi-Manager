@@ -1,5 +1,9 @@
 import { ServiceInterface } from "@zwa73/service-manager";
 import { EventSystem } from "@zwa73/utils";
+import { DiscordSource } from "./Discord";
+import { TelegramSource } from "./Telegram";
+import { KOOKSource } from "./KOOK";
+import { OneBotSource } from "./OneBot";
 
 
 export type SendBaseArg = {
@@ -35,20 +39,21 @@ export type SendTool = {
     sendVoice: (arg:SendVoiceArg) => Promise<boolean>;
 }
 
-
+export type AnySource = DiscordSource|TelegramSource|KOOKSource|OneBotSource;
+export type MessageEventData = {
+    /**消息内容文本 */
+    content:string;
+    /**用户id */
+    userId:string;
+    /**对话归属id 指定消息将要投递的目标位置 */
+    channelId:string;
+    /**消息来源标识符组 */
+    sourceSet:AnySource[];
+}
 /**基础监听器事件表 */
 export type ListenerEventTable ={
     /**文本消息事件 */
-    message:(data:{
-        /**消息内容文本 */
-        content:string,
-        /**用户id */
-        userId:string,
-        /**对话归属id 指定消息将要投递的目标位置 */
-        channelId:string,
-        /**消息来源标识符组 */
-        sourceSet:string[],
-    })=>void;
+    message:(data:MessageEventData)=>void;
 }
 
 /**监听工具 */

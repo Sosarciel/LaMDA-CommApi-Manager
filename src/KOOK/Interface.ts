@@ -18,3 +18,4 @@ export type KOOKServiceData = {
 export type KOOKUserId  = `kook.user.${string}`;
 export type KOOKGuildId = `kook.guild.${string}`;
 export type KOOKChannelId = `kook.channel.${string}`;
+export type KOOKSource = KOOKUserId | KOOKGuildId | KOOKChannelId | 'kook';

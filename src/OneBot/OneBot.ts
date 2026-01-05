@@ -1,6 +1,6 @@
 import { OneBotListener } from "@sosraciel-lamda/onebot11-protoclient";
 import { BaseCommInterface, ListenToolBase, SendMessageArg, SendTool, SendVoiceArg } from "../ChatPlantformInterface";
-import { OneBotServiceData, SubtypeDefine, SubtypeDefineTable } from "./Interface";
+import { OneBotGroupId, OneBotServiceData, OneBotSubtypeId, OneBotUserId, SubtypeDefine, SubtypeDefineTable } from "./Interface";
 import { SLogger, UtilCodec } from "@zwa73/utils";
 
 
@@ -78,13 +78,14 @@ export class OneBotApi extends ListenToolBase implements BaseCommInterface{
                 `group_id: ${group_id}`
             );
 
-            const fixedUserId  = `${this.sub.flag}.user.${user_id}`;
-            const fixedGroupId = `${this.sub.flag}.group.${group_id}`;
+            const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
+            const fixedGroupId:OneBotGroupId = `${this.sub.flag}.group.${group_id}`;
+            const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
             this.invokeEvent('message',{
                 content   : fixedMsg,
                 userId    : fixedUserId,
                 channelId : fixedGroupId,
-                sourceSet : [this.sub.flag,fixedGroupId,fixedUserId]
+                sourceSet : ['onebot',subtypeId,fixedGroupId,fixedUserId]
             });
         }});
         listtener.registerEvent("PrivateMessage",{handler:pdata=>{
@@ -108,12 +109,13 @@ export class OneBotApi extends ListenToolBase implements BaseCommInterface{
                 `user_id: ${user_id}`
             );
 
-            const fixedUserId = `${this.sub.flag}.user.${user_id}`;
+            const fixedUserId:OneBotUserId = `${this.sub.flag}.user.${user_id}`;
+            const subtypeId:OneBotSubtypeId = `onebot.${this.sub.flag}`;
             this.invokeEvent('message',{
                 content   : fixedMsg,
                 userId    : fixedUserId,
                 channelId : fixedUserId,
-                sourceSet : [this.sub.flag,fixedUserId],
+                sourceSet : ['onebot',subtypeId,fixedUserId],
             });
         }});
     }

@@ -15,3 +15,4 @@ export type TelegramServiceData = {
 }
 
 export type TelegramUserId  = `telegram.user.${string}`;
+export type TelegramSource = TelegramUserId | 'telegram';

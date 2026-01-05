@@ -32,6 +32,8 @@ type CommApiManagerOption = {
     inject      :InjectData;
 }
 
+
+
 /**通讯接口管理器 需先调用init */
 export const CommApiManager = UtilFunc.createInjectable({
     initInject(opt:CommApiManagerOption){
