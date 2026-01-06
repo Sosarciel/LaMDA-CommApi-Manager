@@ -1,7 +1,7 @@
 import { ServiceConfig, ServiceManager, ServiceManagerBaseConfig } from "@zwa73/service-manager";
 import { TelegramServiceData, TelegramApi } from "./Telegram";
 import { DiscordApi, DiscordServiceData } from "./Discord";
-import { DataStore, EventSystem, SLogger, UtilFunc } from "@zwa73/utils";
+import { DataStore, EventSystem, None, SLogger, UtilFunc } from "@zwa73/utils";
 import { AudioCache, InjectData, InjectTool } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
@@ -40,7 +40,7 @@ export type CommApiManagerListenerEventTable ={
 }
 type Pack = Exclude<Awaited<ReturnType<ServiceManager<CtorTable>['getService']>>,undefined>;
 class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
-    ref?:ServiceManager<CtorTable>;
+    mgr?:ServiceManager<CtorTable>;
     constructor(){
         super();
     }
@@ -50,12 +50,12 @@ class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
             configTable:opt.serviceTable,
             ctorTable:CtorTable,
         });
-        ins.bindRef(mgr);
+        ins.bindMgr(mgr);
         return ins;
     }
-    async bindRef(ref:ServiceManager<CtorTable>){
-        await this.unbindRef();
-        this.ref = ref;
+    async bindMgr(ref:ServiceManager<CtorTable>){
+        await this.unbindMgr();
+        this.mgr = ref;
         const bindFunc=(serviceType:AnyCommType)=> (instancePack:Pack)=>{
                 const {instance,name} = instancePack;
                 instance.registerEvent('message',{handler:async (data)=>{
@@ -75,18 +75,21 @@ class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
             KOOK    : bindFunc('kook'    ),
         });
     }
-    async unbindRef(){
-        if(this.ref==null) return;
+    async unbindMgr(){
+        if(this.mgr==null) return;
         const unbindFunc=(serviceType:AnyCommType)=> (pack:Pack)=>{
                 const {instance} = pack;
                 instance.unregisterEvent('message','CommApiManagerBridge');
             };
-        await this.ref?.procServiceByType({
+        await this.mgr?.procServiceByType({
             Discord : unbindFunc('discord' ),
             Telegram: unbindFunc('telegram'),
             OneBot  : unbindFunc('onebot'  ),
             KOOK    : unbindFunc('kook'    ),
         });
+    }
+    invoke:ServiceManager<CtorTable>['invoke'] = function (this:_CommApiManager,...args: any[]){
+        return (this.mgr!.invoke as any)(...args) ?? None;
     }
 }
 

@@ -2,7 +2,7 @@ import { Bridge, BridgeInterface, LogLevel, PRecord, sleep, SLogger } from "@zwa
 import { Worker } from "worker_threads";
 import { DiscordServiceData, DiscordWorkerServerInterface } from "./Interface";
 import path from "path";
-import { BaseCommInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import { CommApiInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
 import { AudioCache } from "../Utils";
 
 
@@ -19,7 +19,7 @@ const unwarpId = (text?:string) =>{
 
 
 /**Discord接口 */
-export class DiscordApi extends CommApiListenToolBase implements BaseCommInterface,DiscordWorkerServerInterface{
+export class DiscordApi extends CommApiListenToolBase implements CommApiInterface,DiscordWorkerServerInterface{
     worker?:Worker;
     taskMap:PRecord<string,(arg:boolean)=>void> = {};
     charname:string;

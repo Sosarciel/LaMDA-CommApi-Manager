@@ -72,4 +72,4 @@ export type BaseData = {
 
 
 /**基础通讯工具 */
-export type BaseCommInterface = ServiceInterface<CommApiListenTool&CommApiSendTool&BaseData>;
+export type CommApiInterface = ServiceInterface<CommApiListenTool&CommApiSendTool&BaseData>;
