@@ -1,7 +1,7 @@
 import { ServiceConfig, ServiceManager, ServiceManagerBaseConfig } from "@zwa73/service-manager";
 import { TelegramServiceData, TelegramApi } from "./Telegram";
 import { DiscordApi, DiscordServiceData } from "./Discord";
-import { DataStore, EventSystem, None, SLogger, UtilFunc } from "@zwa73/utils";
+import { EventSystem, None, ParseableDataStore, SLogger, UtilFunc } from "@zwa73/utils";
 import { AudioCache, InjectData, InjectTool } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
@@ -24,7 +24,7 @@ type CommApiManagerJsonTable = ServiceManagerBaseConfig & {
 
 type CommApiManagerOption = {
     /**配置文件路径或配置表 */
-    serviceTable :DataStore<CommApiManagerJsonTable>;
+    serviceTable :ParseableDataStore<CommApiManagerJsonTable>;
     /**缓存文件夹目录
      * 将会存入一些音频缓存
      */
