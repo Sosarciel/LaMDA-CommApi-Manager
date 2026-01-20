@@ -72,7 +72,7 @@ const clipMessage = (text: string, maxLength: number): string[] =>{
  * @param sendType - 类型 "group_message" 或 "private_message"
  */
 export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
-    const sender = new OneBotSender('127.0.0.1', port);
+    const sender = OneBotSender.create({host:'127.0.0.1', port});
     return {
         async sendMessage(params:SendMessageArg): Promise<boolean>{
             const { channelId, userId, message, senderId } = params;

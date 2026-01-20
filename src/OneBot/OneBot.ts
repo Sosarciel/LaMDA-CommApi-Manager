@@ -7,7 +7,7 @@ import { SLogger, UtilCodec } from "@zwa73/utils";
 const ListenerPool:Record<string,OneBotListener> = {};
 const initListener = (port:number)=>{
     if(ListenerPool[port]==null){
-        ListenerPool[port] = new OneBotListener(port);
+        ListenerPool[port] = OneBotListener.create({port});
 
         const listtener = ListenerPool[port];
         //设置监听

@@ -7,7 +7,7 @@ import { AudioCache } from "@/src/Utils";
 
 
 export const QQOfficialActiveSendToolCtor = (port:number):CommApiSendTool=>{
-    const sender = new OneBotSender('127.0.0.1', port);
+    const sender = OneBotSender.create({host:'127.0.0.1', port});
     return {
         async sendMessage(params:SendMessageArg): Promise<boolean> {
             const { channelId, message } = params;
