@@ -2,7 +2,7 @@ import { ServiceConfig, ServiceManager, ServiceManagerBaseConfig } from "@zwa73/
 import { TelegramServiceData, TelegramApi } from "./Telegram";
 import { DiscordApi, DiscordServiceData } from "./Discord";
 import { EventSystem, None, ParseableDataStore, SLogger, UtilFunc } from "@zwa73/utils";
-import { AudioCache, InjectData, InjectTool } from "./Utils";
+import { AudioCache } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
 import { AnyCommType, MessageEventData } from "./ChatPlantformInterface";
@@ -29,8 +29,8 @@ type CommApiManagerOption = {
      * 将会存入一些音频缓存
      */
     cacheDir    :string;
-    /**需要注入的函数 */
-    inject      :InjectData;
+    ///**需要注入的函数 */
+    //inject      :InjectData;
 }
 
 /**基础监听器事件表 */
@@ -98,7 +98,7 @@ class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
 export const CommApiManager = UtilFunc.createInjectable({
     initInject(opt:CommApiManagerOption){
         AudioCache.CACHE_PATH = opt.cacheDir;
-        InjectTool.inject(opt.inject);
+        //InjectTool.inject(opt.inject);
         return _CommApiManager.from(opt);
     }
 });

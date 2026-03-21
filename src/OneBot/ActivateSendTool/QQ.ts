@@ -3,67 +3,8 @@ import { OneBotSender, CQCodeTool } from "@sosraciel-lamda/onebot11-protoclient"
 import { FfmpegTool } from "@zwa73/audio-utils";
 import { chkType } from "./Utils";
 import { SendMessageArg, SendVoiceArg, CommApiSendTool } from "@/src/ChatPlantformInterface";
-import { AudioCache, InjectTool } from "@/src/Utils";
-
-
-
-
-
-/**尝试切片
- * @param text 待切片的回复
- * @param maxLength 每段最大长度
- * @returns 切片完成的回复 null为切片失败
- */
-const tryClip = (regex: RegExp, text: string, maxLength: number): string | null =>{
-    const clipText = text.slice(0, maxLength);
-    let lastIndex = -1;
-    let result = null;
-    while ((result = regex.exec(clipText))) lastIndex = result.index;
-    if (lastIndex != -1 && lastIndex >= maxLength / 2) return text.slice(0, lastIndex + 1);
-    return null;
-}
-
-/**回复切片
- * @param text 待切片的回复
- * @param maxLength 每段最大长度
- * @returns 切片完成的回复
- */
-const clipMessage = (text: string, maxLength: number): string[] =>{
-    //首选
-    const firt = /[:：。；？！.;?!\n…~]/g;
-    //备选
-    const secd = /[，,\s]/g;
-    //末尾备选
-    const lastSecd = new RegExp(`${secd.source}$`);
-    const fistSecd = new RegExp(`^${secd.source}`);
-    const outArr = [];
-    //分段
-    while (text.length > maxLength) {
-        const clipText =
-            tryClip(firt, text, maxLength) ??
-            tryClip(secd, text, maxLength) ??
-            text.slice(0, maxLength);
-        outArr.push(clipText);
-        //裁剪原始字符串
-        text = text.slice(clipText.length);
-    }
-    outArr.push(text);
-    //修正格式，可能增加长度
-    const formatArr = [];
-    for (let clipText of outArr) {
-        //无效备选
-        clipText = clipText.replace(lastSecd, "");
-        clipText = clipText.replace(fistSecd, "");
-        //接收格式化
-        clipText = InjectTool.markdownFormat(clipText);
-        //排除单独的星号
-        clipText = clipText.replace(/\n?^\*$\n?/gm, "");
-        if (clipText.length >= 1) formatArr.push(clipText);
-    }
-    return formatArr;
-}
-
-
+import { AudioCache } from "@/src/Utils";
+import { TextClipper, TextFormatter } from "@sosraciel-lamda/text-processor";
 
 
 /**QQ主动通讯接口
@@ -84,7 +25,10 @@ export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
                     if (notCQ != true)
                         return void sender.sendGroupMsg(nChannelId, message, notCQ);
 
-                    const respArr = clipMessage(message, 80);
+                    const respArr = TextClipper.clipMessage({
+                        text:message, maxLength:80
+                    }).map(TextFormatter.fixMarkdown);
+
                     let firstClip = true;
                     for (const clipMsg of respArr) {
                         const pdelay = clipMsg.length * 100;
@@ -101,7 +45,10 @@ export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
                     if (notCQ != true)
                         return void sender.sendPrivateMsg(nChannelId, message, notCQ);
 
-                    const respArr = clipMessage(message, 80);
+                    const respArr = TextClipper.clipMessage({
+                        text:message, maxLength:80
+                    }).map(TextFormatter.fixMarkdown);
+
                     let firstClip = true;
                     for (const clipMsg of respArr) {
                         const pdelay = clipMsg.length * 20;
