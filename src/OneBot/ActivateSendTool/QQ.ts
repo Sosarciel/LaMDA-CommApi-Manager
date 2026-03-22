@@ -16,7 +16,7 @@ export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
     const sender = OneBotSender.create({host:'127.0.0.1', port});
     return {
         async sendMessage(params:SendMessageArg): Promise<boolean>{
-            const { channelId, userId, message, senderId } = params;
+            const { channelId, message } = params;
 
             const notCQ = true;
             const nChannelId = parseInt(channelId);
@@ -66,7 +66,7 @@ export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
         },
 
         async sendVoice(params:SendVoiceArg ): Promise<boolean> {
-            const { channelId, userId, senderId,voiceFilePath } = params;
+            const { channelId,voiceFilePath } = params;
 
             const notCQ = false;
             const nChannelId = parseInt(channelId);
