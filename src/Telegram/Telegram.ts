@@ -1,6 +1,6 @@
 
 import TelegramBot from 'node-telegram-bot-api';
-import createHttpsProxyAgent, { HttpsProxyAgent } from 'https-proxy-agent';
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg } from '../ChatPlantformInterface';
 import { Failed, SLogger, Success, UtilFunc } from '@zwa73/utils';
 import { AudioCache } from '../Utils';
@@ -24,7 +24,7 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
     charname:string;
     token: string;
     proxyUrl?:string;
-    agent?: HttpsProxyAgent;
+    agent?: HttpsProxyAgent<string>;
     bot:TelegramBot;
 
     constructor(private data:TelegramServiceData){
@@ -32,7 +32,7 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
         this.charname = data.charname;
         this.token = data.token;
         this.proxyUrl = data.proxy_url;
-        if(this.proxyUrl) this.agent = createHttpsProxyAgent(this.proxyUrl);
+        if(this.proxyUrl) this.agent = new HttpsProxyAgent(this.proxyUrl);
 
         const opt:{
             request?:any

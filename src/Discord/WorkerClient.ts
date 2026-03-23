@@ -6,7 +6,6 @@ import { Bridge, BridgeInterface } from "@zwa73/utils";
 import type { DiscordChannelId, DiscordGuildId, DiscordServiceData, DiscordUserId, DiscordWorkerServerInterface } from "./Interface";
 import type { SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
 
-
 /**Discord接口 */
 class DiscordWorkerClient implements CommApiSendTool{
     charname:string;
@@ -42,7 +41,7 @@ class DiscordWorkerClient implements CommApiSendTool{
             partials: [Partials.Channel,Partials.Message],
             rest:{
                 agent:this.agent
-            }
+            },
         });
 
         client.once(Events.ClientReady, async () => {
