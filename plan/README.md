@@ -11,7 +11,7 @@ aliases: [CommApi-Manager 实施计划索引]
 ```base
 filters:
   and:
-    - file.path.startsWith("LaMDA-Module/Service-Manager/CommApi-Manager/plan")
+    - file.folder == "LaMDA-Module/Service-Manager/CommApi-Manager/plan"
     - file.name != "README"
 views:
   - type: table
