@@ -10,9 +10,6 @@
 
 - [[plan/README|查看所有计划]]
 
-### 当前计划
-- [[plan/Module-Analysis|CommApi-Manager 模块优化与演进分析]]
-
 ---
 
 *最后更新: 2026-03-25*
