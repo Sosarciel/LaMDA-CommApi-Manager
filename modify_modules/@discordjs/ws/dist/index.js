@@ -676,7 +676,7 @@ var WebSocketShard = class extends import_async_event_emitter.AsyncEventEmitter 
     this.debug([`Connecting to ${url}`]);
     const connection = new WebSocketConstructor(url, [], {
       handshakeTimeout: this.strategy.options.handshakeTimeout ?? void 0,
-      agent: new (require('https-proxy-agent'))('http://127.0.0.1:7890')
+      agent: new (require('https-proxy-agent').HttpsProxyAgent)('http://127.0.0.1:7890')
     });
     connection.binaryType = "arraybuffer";
     connection.onmessage = (event) => {
