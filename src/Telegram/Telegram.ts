@@ -5,6 +5,7 @@ import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg }
 import { Failed, SLogger, Success, UtilFunc } from '@zwa73/utils';
 import { AudioCache } from '../Utils';
 import { TelegramServiceData, TelegramUserId } from './Interface';
+import { TextClipper } from '@sosraciel-lamda/text-processor';
 
 
 const unwarpRegex = /telegram\.(user)\.(.+)/;
@@ -89,13 +90,22 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
             //        .replace(/^\*(.+)\*$/gm,'<em>$1</em>') +
             //        //.replace(/^(.+)$/gm,'<p style="margin-bottom: 0.25em;">$1</p>') +
             //    "</div>";
-            const mdmsg = message.replace(/\n/gm,'\n\n');
+            const clip = (text:string)=>TextClipper.clipMessage({
+                text, maxLength:3800, minLength:3000,
+                separators:[
+                    /\r?\n/,
+                    /[:：。；？！.;?!\n…~]/
+                ],
+            });
+            const mdmsgList = clip(message.replace(/\n/gm,'\n\n'));
             const retryStatus = await UtilFunc.retryPromise(async ()=>{
                 try{
-                    const resp = await this.bot.sendMessage(fixcid, mdmsg,{
-                        ...opt,
-                        parse_mode:"Markdown"
-                    });
+                    for(const mdmsg of mdmsgList){
+                        const resp = await this.bot.sendMessage(fixcid, mdmsg,{
+                            ...opt,
+                            parse_mode:"Markdown"
+                        });
+                    }
                     return Success;
                 }catch{
                     return undefined;
@@ -105,8 +115,12 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
             });
 
             if(retryStatus.completed==undefined){
-                SLogger.warn(`TelegramApi.sendMessage 发送md格式失败 尝试发送普通消息\nmdmsg: ${mdmsg}`);
-                const resp = await this.bot.sendMessage(fixcid, message,opt);
+                SLogger.warn(`TelegramApi.sendMessage 发送md格式失败 尝试发送普通消息`);
+                for(const idx in mdmsgList) SLogger.warn(`mdmsg[${idx}]: ${mdmsgList[idx]}`);
+                const msgList = clip(message);
+                for(const msg of msgList){
+                    const resp = await this.bot.sendMessage(fixcid, msg,opt);
+                }
             }
         }catch(err){
             SLogger.warn(`TelegramApi.sendMessage 错误: `,err,`Arg: ${UtilFunc.stringifyJToken(arg,{space:2,compress:true})}`);
