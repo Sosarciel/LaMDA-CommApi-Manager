@@ -92,7 +92,12 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
                 .row()
                 .text('cmd:getaudio').text('cmd:save')
                 .build({ resize_keyboard: true, one_time_keyboard: true });
-
+            //.replace(/^\*(.+)\*$/gm,'*$1*');
+            //mdmsg = "<div>"+
+            //    message
+            //        .replace(/^\*(.+)\*$/gm,'<em>$1</em>') +
+            //        //.replace(/^(.+)$/gm,'<p style="margin-bottom: 0.25em;">$1</p>') +
+            //    "</div>";
             const clip = (text: string) => TextClipper.clipMessage({
                 text, maxLength: 3800, minLength: 3000,
                 separators: [
