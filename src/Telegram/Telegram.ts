@@ -69,7 +69,7 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
 
         // 启动轮询（内置指数退避重试，免去挂死烦恼）
         this.bot.startPolling(undefined,{
-            timeout:10000,
+            timeout:10,
         }).catch(err => {
             SLogger.error(`TelegramApi startPolling 启动失败: `, err);
         });
