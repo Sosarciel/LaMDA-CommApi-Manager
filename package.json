@@ -1,6 +1,6 @@
 {
 	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.69",
+	"version": "1.0.70",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
@@ -30,10 +30,7 @@
 		"@zwa73/utils": "^1.0.295",
 		"discord.js": "14.25.1",
 		"https-proxy-agent": "^7.0.6",
-		"node-telegram-bot-api": "0.66.0",
+		"node-telegram-bot-api": "^2.1.0",
 		"undici": "^6.24.1"
-	},
-	"devDependencies": {
-		"@types/node-telegram-bot-api": "^0.64.10"
 	}
 }
