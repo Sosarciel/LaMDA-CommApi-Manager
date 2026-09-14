@@ -101,6 +101,11 @@ export class DiscordApi extends CommApiListenToolBase implements CommApiInterfac
             client:this,
             send:(data)=>this.worker?.postMessage(data),
             init:(onData)=>this.worker?.on('message',onData),
+
+            // WorkerClient 均为耗时网络操作, 设为需accept且不允许重试
+            needAccept:true,
+            acceptedRetry:0,
+            acceptedTimeout:0,
         });
         this.worker.on('exit', async (code) => {
             const { delay, retryCount, uptime } = this.backoff.step();

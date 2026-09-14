@@ -1,6 +1,6 @@
 {
 	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.72",
+	"version": "1.0.73",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",
@@ -25,7 +25,7 @@
 		"@sosraciel-lamda/onebot11-protoclient": "^1.0.10",
 		"@sosraciel-lamda/text-processor": "^1.0.2",
 		"@zwa73/audio-utils": "^1.0.24",
-		"@zwa73/js-utils": "^1.0.86",
+		"@zwa73/js-utils": "^1.0.90",
 		"@zwa73/service-manager": "^1.0.29",
 		"@zwa73/utils": "^1.0.295",
 		"discord.js": "14.27.0",

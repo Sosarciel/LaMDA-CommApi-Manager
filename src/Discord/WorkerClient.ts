@@ -34,6 +34,14 @@ class DiscordWorkerClient implements CommApiSendTool{
             client:this,
             send:(data)=>parentPort?.postMessage(data),
             init:(onData)=>parentPort?.on('message',onData),
+            funcRuleTable:{
+                invokeEvent:{
+                    // invokeEvent 为耗时操作, 设置为accept模式并不允许accept后重试
+                    needAccept:true,
+                    acceptedRetry:0,
+                    acceptedTimeout:0,
+                }
+            }
         });
         const client = new Client({
             intents: [
@@ -53,6 +61,7 @@ class DiscordWorkerClient implements CommApiSendTool{
         });
         client.on(Events.MessageCreate, async (message: Message) => {
             try{
+            if (message.author.bot) return;
             await this.bridge.log('http',
                 `DiscordApi.onMessage ${this.charname} {\n`+
                 `  content:${message.content},\n`   +
@@ -61,7 +70,6 @@ class DiscordWorkerClient implements CommApiSendTool{
                 `  channelId:${message.channelId}\n`+
                 `}`
             );
-            if (message.author.bot) return;
             //console.log(message);
             //await message.reply('pong');
             const channel = message.channel;
