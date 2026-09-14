@@ -1,3 +1,7 @@
+// 必须先patchWs
+import patchWs from './PatchWs';
+patchWs();
+
 import { AttachmentBuilder, Client, Events, GatewayIntentBits, Message, Partials } from "discord.js";
 import { ProxyAgent } from "undici";
 import fs from 'fs';
@@ -87,6 +91,7 @@ class DiscordWorkerClient implements CommApiSendTool{
         });
         client.login(this.token).catch(async e=>{
             await this.bridge.log('error',`DiscordApi 登录错误 charname:${this.charname} error:${String(e)}`);
+            process.exit(1); // 登录失败必须退出线程，让主线程捕获 exit 触发退避重试
         });
         this.client = client;
     }
