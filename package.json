@@ -1,6 +1,6 @@
 {
 	"name": "@sosraciel-lamda/commapi-manager",
-	"version": "1.0.73",
+	"version": "1.0.75",
 	"main": "dist/index.js",
 	"scripts": {
 		"test": "jest",

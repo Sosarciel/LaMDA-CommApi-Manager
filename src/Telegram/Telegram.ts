@@ -146,15 +146,20 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
     }
 
     async sendVoice(arg: SendVoiceArg) {
-        const { voiceFilePath, userId } = arg;
-        const fixuid = unwarpId(userId)!;
-        const transfp = await AudioCache.transcode2opusogg(voiceFilePath, 256);
+        try {
+            const { voiceFilePath, userId } = arg;
+            const fixuid = unwarpId(userId)!;
+            const transfp = await AudioCache.transcode2opusogg(voiceFilePath, 256);
 
-        // v2 上传本地磁盘文件需使用 fromPath 包装
-        await this.bot.api.sendVoice({
-            chat_id: fixuid,
-            voice: await fromPath(transfp)
-        });
-        return true;
+            // v2 上传本地磁盘文件需使用 fromPath 包装
+            await this.bot.api.sendVoice({
+                chat_id: fixuid,
+                voice: await fromPath(transfp)
+            });
+            return true;
+        }catch(err){
+            SLogger.warn(`TelegramApi.sendVoice 错误: `, err, `Arg: ${UtilFunc.stringifyJToken(arg, { space: 2, compress: true })}`);
+            return false;
+        }
     }
 }

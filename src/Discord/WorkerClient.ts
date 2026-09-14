@@ -105,38 +105,59 @@ class DiscordWorkerClient implements CommApiSendTool{
     }
     async sendMessage(arg: SendMessageArg) {
         const {message,userId,channelId}=arg;
-        const channel = this.client.channels.cache.get(channelId);
-        if(channel?.isSendable()){
-            await channel.send(message);
-            return true;
+        try{
+            const channel = this.client.channels.cache.get(channelId) ??
+                await this.client.channels.fetch(channelId).catch(() => null);
+            if(channel?.isSendable()){
+                await channel.send(message);
+                return true;
+            }
+            await this.bridge.log('warn',`DiscordApi WorkerClient.sendMessage 发送失败\n`+
+                `channelId:${channel?.id}\n` +
+                `channel.isSendable:${channel?.isSendable()}\n`+
+                `userId:${userId}\n`+
+                `groupId:${channelId}\n`+
+                `message:${message}`
+            );
+            return false;
+        }catch(err){
+            await this.bridge.log('warn', `DiscordApi WorkerClient.sendMessage 错误\n`+
+                `userId:${userId}\n`+
+                `channelId:${channelId}\n`+
+                `message:${message}\n`+
+                `error:${String(err)}`
+            );
+            return false;
         }
-        this.bridge.log('warn',`DiscordApi WorkerClient.sendMessage 发送失败\n`+
-            `channelId:${channel?.id}\n` +
-            `channel.isSendable:${channel?.isSendable()}\n`+
-            `userId:${userId}\n`+
-            `groupId:${channelId}\n`+
-            `message:${message}`
-        );
-        return false;
     }
     async sendVoice(arg: SendVoiceArg){
         const {userId,voiceFilePath,channelId}=arg;
-        const channel = this.client.channels.cache.get(channelId);
-        if(channel?.isSendable()){
-            //const oggpath = await transcode2opusogg(voiceFilePath,256);
-            const audioBuffer = await fs.promises.readFile(voiceFilePath);
-            const attr = new AttachmentBuilder(audioBuffer, { name: 'voice.wav' });
-            await channel.send({files:[attr]});
-            return true;
+        try{
+            const channel = this.client.channels.cache.get(channelId);
+            if(channel?.isSendable()){
+                //const oggpath = await transcode2opusogg(voiceFilePath,256);
+                const audioBuffer = await fs.promises.readFile(voiceFilePath);
+                const attr = new AttachmentBuilder(audioBuffer, { name: 'voice.wav' });
+                await channel.send({files:[attr]});
+                return true;
+            }
+            await this.bridge.log('warn',`DiscordApi WorkerClient.sendVoice 发送失败\n`+
+                `channelId:${channel?.id}\n` +
+                `channel.isSendable:${channel?.isSendable()}\n`+
+                `userId:${userId}\n`+
+                `channelId:${channelId}\n`+
+                `voiceFilePath:${voiceFilePath}`
+            );
+            return false;
+        }catch(err){
+            await this.bridge.log('warn', `DiscordApi WorkerClient.sendVoice 错误\n`+
+                `userId:${userId}\n`+
+                `channelId:${channelId}\n`+
+                `voiceFilePath:${voiceFilePath}\n`+
+                `error:${String(err)}`
+            );
+            return false;
         }
-        this.bridge.log('warn',`DiscordApi WorkerClient.sendVoice 发送失败\n`+
-            `channelId:${channel?.id}\n` +
-            `channel.isSendable:${channel?.isSendable()}\n`+
-            `userId:${userId}\n`+
-            `channelId:${channelId}\n`+
-            `voiceFilePath:${voiceFilePath}`
-        );
-        return false;
     }
 }
 
