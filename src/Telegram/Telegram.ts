@@ -107,23 +107,27 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
             });
             const mdmsgList = clip(message.replace(/\n/gm, '\n\n'));
 
-            const retryStatus = await UtilFunc.retryPromise(async () => {
-                try {
-                    for (const mdmsg of mdmsgList) {
-                        // v2 统一使用 bot.api.<method>({ 单对象参数 })
-                        await this.bot.api.sendMessage({
-                            chat_id: fixcid,
-                            text: mdmsg,
-                            parse_mode: 'Markdown',
-                            reply_markup: replyMarkup
-                        });
+            const retryStatus = await UtilFunc.retryPromise({
+                task:async () => {
+                    try {
+                        for (const mdmsg of mdmsgList) {
+                            // v2 统一使用 bot.api.<method>({ 单对象参数 })
+                            await this.bot.api.sendMessage({
+                                chat_id: fixcid,
+                                text: mdmsg,
+                                parse_mode: 'Markdown',
+                                reply_markup: replyMarkup
+                            });
+                        }
+                        return Success;
+                    } catch {
+                        return undefined;
                     }
-                    return Success;
-                } catch {
-                    return undefined;
+                },
+                verify: v => v ?? Failed, 
+                retry:{
+                    tryDelay: 1000, tryInterval: -1, count: 3, logFlag: 'TelegramApi.sendMessage'
                 }
-            }, v => v ?? Failed, {
-                tryDelay: 1000, tryInterval: -1, count: 3, logFlag: 'TelegramApi.sendMessage'
             });
 
             if (retryStatus.completed == undefined) {
