@@ -50,6 +50,18 @@ views:
 
 ## 📖 计划简报
 
+### CommApi 图像发送接口扩展
+
+**目标**: 为 `CommApiSendTool` 新增 `sendImage`，支持 jxl 等冷门格式经平台侧判断后转 png 发送
+
+**要点**:
+- 图像走 sharp，jxl 走 `@jsquash/jxl` WASM（libvips 未编入 libjxl）
+- `MediaCache.transcode2png` 为无条件转换工具，是否转换由各平台自行按扩展名判断
+- 四个平台已实现，OB11 使用 `CQCodeTool.fileImage`
+- 顺带修复了 P0「SelfIdEventTable 检测」的类型错误
+
+**详情**: [[image-send-extension]]
+
 ### CommApi-Manager 模块优化与演进分析
 
 **模块信息**:
@@ -58,7 +70,7 @@ views:
 - 仓库: https://github.com/Sosarciel/LaMDA-CommApi-Manager
 
 **核心问题**:
-- P0: SelfIdEventTable 检测 (2h)
+- ~~P0: SelfIdEventTable 检测 (2h)~~ ✅ 已解决 (2026-10-12, 见 [[image-send-extension]])
 - P0: 异常传播 (4h)
 - P1: 类型导出 (2h)
 - P1: modify_modules (16h)
@@ -72,4 +84,4 @@ views:
 
 ---
 
-*最后更新: 2026-04-09*
+*最后更新: 2026-10-12*

@@ -1,11 +1,15 @@
 import { Bot, ReplyKeyboardBuilder } from 'node-telegram-bot-api';
 import { fromPath } from 'node-telegram-bot-api/node';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
-import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg } from '../ChatPlantformInterface';
+import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg, SendImageArg } from '../ChatPlantformInterface';
 import { Failed, SLogger, Success, UtilFunc } from '@zwa73/utils';
-import { AudioCache } from '../Utils';
+import { MediaCache } from '../Utils';
 import { TelegramServiceData, TelegramUserId } from './Interface';
 import { TextClipper } from '@sosraciel-lamda/text-processor';
+import path from 'pathe';
+
+/**Telegram sendPhoto 支持的图片扩展名 */
+const SUPPORTED_IMG_EXT:readonly string[] = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 const unwarpRegex = /telegram\.(user)\.(.+)/;
 const unwarpId = (text?: string) => {
@@ -153,7 +157,7 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
         try {
             const { voiceFilePath, userId } = arg;
             const fixuid = unwarpId(userId)!;
-            const transfp = await AudioCache.transcode2opusogg(voiceFilePath, 256);
+            const transfp = await MediaCache.transcode2opusogg(voiceFilePath, 256);
 
             // v2 上传本地磁盘文件需使用 fromPath 包装
             await this.bot.api.sendVoice({
@@ -163,6 +167,29 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
             return true;
         }catch(err){
             SLogger.warn(`TelegramApi.sendVoice 错误: `, err, `Arg: ${UtilFunc.stringifyJToken(arg, { space: 2, compress: true })}`);
+            return false;
+        }
+    }
+
+    async sendImage(arg: SendImageArg) {
+        try {
+            const { imageFilePath, userId } = arg;
+            const fixuid = unwarpId(userId)!;
+
+            // 不在支持列表内的格式转为 png
+            const ext = path.extname(imageFilePath).toLowerCase();
+            const sendPath = SUPPORTED_IMG_EXT.includes(ext)
+                ? imageFilePath
+                : await MediaCache.transcode2png(imageFilePath);
+
+            // v2 上传本地磁盘文件需使用 fromPath 包装
+            await this.bot.api.sendPhoto({
+                chat_id: fixuid,
+                photo: await fromPath(sendPath)
+            });
+            return true;
+        }catch(err){
+            SLogger.warn(`TelegramApi.sendImage 错误: `, err, `Arg: ${UtilFunc.stringifyJToken(arg, { space: 2, compress: true })}`);
             return false;
         }
     }

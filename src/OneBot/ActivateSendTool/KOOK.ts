@@ -1,8 +1,8 @@
-import { SendMessageArg, CommApiSendTool, SendVoiceArg } from "@/src/ChatPlantformInterface";
+import { SendMessageArg, CommApiSendTool, SendVoiceArg, SendImageArg } from "@/src/ChatPlantformInterface";
 import { CQCodeTool, OneBotSender } from "@sosraciel-lamda/onebot11-protoclient";
 import { chkType } from "./Utils";
 import { match, sleep, SLogger, UtilFT } from "@zwa73/utils";
-import { AudioCache } from "@/src/Utils";
+import { MediaCache } from "@/src/Utils";
 import fs from 'fs';
 
 
@@ -39,7 +39,7 @@ export const KookActiveSendToolCtor = (port:number):CommApiSendTool=>{
                 SLogger.warn(`ActiveSendTool.sendVoice 错误 voiceFilePath 不存在: ${voiceFilePath}`);
                 return false;
             }
-            const wavpath = await AudioCache.acodec2pcms16(voiceFilePath);
+            const wavpath = await MediaCache.acodec2pcms16(voiceFilePath);
             const data = await fs.promises.readFile(wavpath);
             const base64 = data.toString('base64');
             const voiceCQ = CQCodeTool.base64Record(base64);
@@ -52,6 +52,26 @@ export const KookActiveSendToolCtor = (port:number):CommApiSendTool=>{
                 "private_message":async()=>{
                     await sleep(500 + Math.floor( Math.random() * 500));
                     void sender.sendPrivateMsg(nChannelId, voiceCQ, notCQ);
+                },
+            })
+            return true;
+        },
+        async sendImage(params:SendImageArg): Promise<boolean> {
+            const { channelId, imageFilePath } = params;
+
+            const notCQ = false;
+            // 协议端图片格式支持不一, 统一转 png
+            const pngpath = await MediaCache.transcode2png(imageFilePath);
+            const imageCQ = CQCodeTool.fileImage(pngpath);
+            const nChannelId = parseInt(channelId);
+            await match(chkType(params),{
+                "group_message":async ()=>{
+                    await sleep(500 + Math.floor( Math.random() * 500));
+                    void sender.sendGroupMsg(nChannelId, imageCQ, notCQ);
+                },
+                "private_message":async()=>{
+                    await sleep(500 + Math.floor( Math.random() * 500));
+                    void sender.sendPrivateMsg(nChannelId, imageCQ, notCQ);
                 },
             })
             return true;

@@ -2,7 +2,7 @@ import { ServiceConfig, ServiceManager, ServiceManagerBaseConfig } from "@zwa73/
 import { TelegramServiceData, TelegramApi } from "./Telegram";
 import { DiscordApi, DiscordServiceData } from "./Discord";
 import { EventSystem, None, ParseableDataStore, SLogger, UtilFunc } from "@zwa73/utils";
-import { AudioCache } from "./Utils";
+import { MediaCache } from "./Utils";
 import { OneBotApi, OneBotServiceData } from "./OneBot";
 import { KOOKApi, KOOKServiceData } from "./KOOK";
 import { AnyCommType, MessageEventData } from "./ChatPlantformInterface";
@@ -97,7 +97,7 @@ class _CommApiManager extends EventSystem<CommApiManagerListenerEventTable>{
 /**通讯接口管理器 需先调用init */
 export const CommApiManager = UtilFunc.createInjectable({
     initInject(opt:CommApiManagerOption){
-        AudioCache.CACHE_PATH = opt.cacheDir;
+        MediaCache.CACHE_PATH = opt.cacheDir;
         //InjectTool.inject(opt.inject);
         return _CommApiManager.from(opt);
     }

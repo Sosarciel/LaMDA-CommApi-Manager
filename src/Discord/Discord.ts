@@ -2,10 +2,15 @@ import { Bridge, BridgeInterface, LogLevel, PRecord, sleep, SLogger } from "@zwa
 import { Worker } from "worker_threads";
 import { DiscordServiceData, DiscordWorkerServerInterface } from "./Interface";
 import path from "path";
-import { CommApiInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
-import { AudioCache } from "../Utils";
+import { CommApiInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg, SendImageArg } from "../ChatPlantformInterface";
+import { MediaCache } from "../Utils";
 
 
+
+/**Discord 附件支持的图片扩展名
+ * 对齐 discord.js 的 ALLOWED_EXTENSIONS
+ */
+const SUPPORTED_IMG_EXT:readonly string[] = ['.webp', '.png', '.jpg', '.jpeg', '.gif'];
 
 const unwarpRegex = /discord\.(user|guild|channel)\.(.+)/;
 const unwarpId = (text?:string) =>{
@@ -135,11 +140,23 @@ export class DiscordApi extends CommApiListenToolBase implements CommApiInterfac
         })??false;
     }
     async sendVoice(arg: SendVoiceArg){
-        const wavpath = await AudioCache.acodec2pcms16(arg.voiceFilePath);
+        const wavpath = await MediaCache.acodec2pcms16(arg.voiceFilePath);
         return this.bridge?.sendVoice({...arg,
             userId    : unwarpId(arg.userId)!,
             channelId : unwarpId(arg.channelId)!,
             voiceFilePath:wavpath
+        })??false;
+    }
+    async sendImage(arg: SendImageArg){
+        // 不在支持列表内的格式转为 png (转码在主线程完成, worker 只负责发送)
+        const ext = path.extname(arg.imageFilePath).toLowerCase();
+        const sendPath = SUPPORTED_IMG_EXT.includes(ext)
+            ? arg.imageFilePath
+            : await MediaCache.transcode2png(arg.imageFilePath);
+        return this.bridge?.sendImage({...arg,
+            userId      : unwarpId(arg.userId)!,
+            channelId   : unwarpId(arg.channelId)!,
+            imageFilePath:sendPath
         })??false;
     }
 }

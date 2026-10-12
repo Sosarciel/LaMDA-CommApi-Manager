@@ -25,6 +25,11 @@ export type SendVoiceArg =  SendBaseArg&{
     voiceFilePath: string;
 }
 
+export type SendImageArg =  SendBaseArg&{
+    /**图片文件路径 */
+    imageFilePath: string;
+}
+
 /**发信工具 */
 export type CommApiSendTool = {
     /**发送文本
@@ -37,6 +42,11 @@ export type CommApiSendTool = {
      * @returns 是否成功发送
      */
     sendVoice: (arg:SendVoiceArg) => Promise<boolean>;
+    /**发送图片
+     * @param arg  - 发送图片参数
+     * @returns 是否成功发送
+     */
+    sendImage: (arg:SendImageArg) => Promise<boolean>;
 }
 
 export type AnyCommSource = DiscordSource|TelegramSource|KOOKSource|OneBotSource;
@@ -60,7 +70,7 @@ export type CommApiListenerEventTable ={
 
 /**监听工具 */
 export type CommApiListenTool = EventSystem<CommApiListenerEventTable>;
-export const CommApiListenToolBase = class extends EventSystem<CommApiListenerEventTable>{
+export class CommApiListenToolBase extends EventSystem<CommApiListenerEventTable>{
     isRuning(){return true;}
 };
 

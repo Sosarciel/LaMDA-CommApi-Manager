@@ -5,10 +5,11 @@ patchWs();
 import { AttachmentBuilder, Client, Events, GatewayIntentBits, Message, Partials } from "discord.js";
 import { ProxyAgent } from "undici";
 import fs from 'fs';
+import path from 'path';
 import { parentPort, workerData } from "worker_threads";
 import { Bridge, BridgeInterface } from "@zwa73/utils";
 import type { DiscordChannelId, DiscordGuildId, DiscordServiceData, DiscordUserId, DiscordWorkerServerInterface } from "./Interface";
-import type { SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import type { SendMessageArg, CommApiSendTool, SendVoiceArg, SendImageArg } from "../ChatPlantformInterface";
 
 /**Discord接口 */
 class DiscordWorkerClient implements CommApiSendTool{
@@ -154,6 +155,33 @@ class DiscordWorkerClient implements CommApiSendTool{
                 `userId:${userId}\n`+
                 `channelId:${channelId}\n`+
                 `voiceFilePath:${voiceFilePath}\n`+
+                `error:${String(err)}`
+            );
+            return false;
+        }
+    }
+    async sendImage(arg: SendImageArg){
+        const {userId,imageFilePath,channelId}=arg;
+        try{
+            const channel = this.client.channels.cache.get(channelId);
+            if(channel?.isSendable()){
+                const imageBuffer = await fs.promises.readFile(imageFilePath);
+                const attr = new AttachmentBuilder(imageBuffer, { name: path.basename(imageFilePath) });
+                await channel.send({files:[attr]});
+                return true;
+            }
+            await this.bridge.log('warn',`DiscordApi WorkerClient.sendImage 发送失败\n`+
+                `channelId:${channel?.id}\n` +
+                `channel.isSendable:${channel?.isSendable()}\n`+
+                `userId:${userId}\n`+
+                `imageFilePath:${imageFilePath}`
+            );
+            return false;
+        }catch(err){
+            await this.bridge.log('warn', `DiscordApi WorkerClient.sendImage 错误\n`+
+                `userId:${userId}\n`+
+                `channelId:${channelId}\n`+
+                `imageFilePath:${imageFilePath}\n`+
                 `error:${String(err)}`
             );
             return false;

@@ -1,7 +1,15 @@
 import { CardMessage, KOOKWebsocketClient } from "@sosraciel-lamda/kook-protoclient";
-import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg } from "../ChatPlantformInterface";
+import { CommApiInterface, CommApiListenToolBase, SendMessageArg, SendVoiceArg, SendImageArg } from "../ChatPlantformInterface";
 import { KOOKChannelId, KOOKGuildId, KOOKServiceData, KOOKUserId } from "./Interface";
 import { SLogger } from "@zwa73/utils";
+import { MediaCache } from "../Utils";
+import path from 'pathe';
+
+
+/**KOOK 卡片图片元素支持的扩展名
+ * 官方文档明确仅支持 image/jpeg, image/gif, image/png
+ */
+const SUPPORTED_IMG_EXT:readonly string[] = ['.jpg', '.jpeg', '.png', '.gif'];
 
 
 const unwarpRegex = new RegExp(`(kook)\\.(user|channel|guild)\\.(\\d+)`);
@@ -147,6 +155,47 @@ export class KOOKApi extends CommApiListenToolBase implements CommApiInterface{
         const successSend = result?.code==0;
         if(!successSend)
             SLogger.warn(`KOOKApi.sendVoice 消息发送失败 result:`,result);
+        return successSend;
+    }
+    async sendImage(arg:SendImageArg){
+        const {channelId,userId,imageFilePath} = arg;
+
+        // 不在支持列表内的格式转为 png
+        const ext = path.extname(imageFilePath).toLowerCase();
+        const sendPath = SUPPORTED_IMG_EXT.includes(ext)
+            ? imageFilePath
+            : await MediaCache.transcode2png(imageFilePath);
+
+        const data = await this.client.apiSender.uploadMedia(sendPath);
+        const successUpload = data?.code==0;
+        if(!successUpload)
+            SLogger.warn(`KOOKApi.sendImage 文件上传失败 data:`,data);
+        if(!successUpload) return false;
+
+        const card = [{
+            type:'card',
+            modules:[{
+                type:'container',
+                elements:[{
+                    type:'image',
+                    src :data?.data.url!,
+                }],
+            }]
+        }]as const satisfies CardMessage;
+        const result = await (channelId==userId
+        ? this.client.apiSender.sendPrivateMsg({
+            type:10,
+            target_id : unwarpId(channelId)!,
+            content   : JSON.stringify(card),
+        })
+        : this.client.apiSender.sendChannelMsg({
+            type:10,
+            target_id : unwarpId(channelId)!,
+            content   : JSON.stringify(card),
+        }));
+        const successSend = result?.code==0;
+        if(!successSend)
+            SLogger.warn(`KOOKApi.sendImage 消息发送失败 result:`,result);
         return successSend;
     }
     getData(){

@@ -1,5 +1,5 @@
 import { OneBotListener } from "@sosraciel-lamda/onebot11-protoclient";
-import { CommApiInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg } from "../ChatPlantformInterface";
+import { CommApiInterface, CommApiListenToolBase, SendMessageArg, CommApiSendTool, SendVoiceArg, SendImageArg } from "../ChatPlantformInterface";
 import { OneBotGroupId, OneBotServiceData, OneBotSubtypeId, OneBotUserId, SubtypeDefine, SubtypeDefineTable } from "./Interface";
 import { SLogger, UtilCodec } from "@zwa73/utils";
 
@@ -25,7 +25,7 @@ type Table = OneBotListener['_table'];
 // 用于在多self_id共用同端口监听器时直接使用self_id路由触发事件
 // 避免多播 即避免 N个self_id的实例在创建时多次在监听器上注册事件,再各自以self_id==data.self_id过滤的 O(N) 级开销
 const SelfIdEventTable:Record<string,{
-    [K in keyof Table]?:NonNullable<Table[K]>[number]['handler']
+    [K in keyof Table]?:NonNullable<Table[K]>[string]['handler']
 }> = {};
 
 const prefixList = Object.values(SubtypeDefineTable).map(v=>v.flag);
@@ -152,6 +152,12 @@ export class OneBotApi extends CommApiListenToolBase implements CommApiInterface
     }
     sendVoice(arg:SendVoiceArg){
         return this.ast.sendVoice({...arg,
+            userId    : unwarpId(arg.userId)!,
+            channelId : unwarpId(arg.channelId)!
+        });
+    }
+    sendImage(arg:SendImageArg){
+        return this.ast.sendImage({...arg,
             userId    : unwarpId(arg.userId)!,
             channelId : unwarpId(arg.channelId)!
         });
