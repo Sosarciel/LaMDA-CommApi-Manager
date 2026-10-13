@@ -52,21 +52,26 @@ aliases: [CommApi 图像发送接口扩展]
 | 文件 | 改动 |
 |---|---|
 | `src/ChatPlantformInterface.ts` | 新增 `SendImageArg` 与 `CommApiSendTool.sendImage` |
-| `src/Utils.ts` | 新增 `ImageConvert.convertToPng`、`MediaCache.transcode2png` |
+| `src/Utils.ts` | `MediaCache.transcode2png` 委派给 `ImageWorkerPool` |
+| `src/Core/ImageWorkerClient.ts` | **新增** worker 线程：fetch patch + jxl WASM + sharp |
+| `src/Core/ImageWorkerPool.ts` | **新增** 主线程常驻单例与 Bridge 管理 |
+| `src/Core/index.ts` | **新增** |
 | `src/Telegram/Telegram.ts` | `sendPhoto` + `fromPath` |
 | `src/Discord/Discord.ts` | 主线程判断与转码，桥接至 worker |
 | `src/Discord/WorkerClient.ts` | `AttachmentBuilder` 发送 |
 | `src/KOOK/KOOK.ts` | `uploadMedia` + 卡片 `container > image` |
 | `src/OneBot/OneBot.ts` | `sendImage` 转发至 `ast` |
 | `src/OneBot/ActivateSendTool/{QQ,KOOK,QQOfficial}.ts` | `fileImage` 发送 |
-| `src/Utils.ts` (顺带) | `AudioCache` 重命名为 `MediaCache`，混装音视频与图像转换 |
+| `src/Utils.ts` (顺带) | `AudioCache` 重命名为 `MediaCache`，混装音频与图像转换 |
 
 ### jxl 解码关键点
 
 `@jsquash/jxl` 加载 wasm 走 `file://` 协议，而 Node 原生 fetch 不支持该协议，
-必须在解码前修补 `globalThis.fetch`（见 `ImageConvert` 内的 `patchJxlFetch`），否则会崩溃。
+必须在解码前修补 `globalThis.fetch`，否则会崩溃。
 
-**注意**：修补时须用 `Blob` 包装文件内容再交给 `Response`，不可直接传 `Buffer`。
+**修补被隔离在 worker 线程内**，主线程的 `globalThis.fetch` 不被触碰。
+
+修补时须用 `Blob` 包装文件内容再交给 `Response`，不可直接传 `Buffer`。
 `Buffer<ArrayBufferLike>` 与 Web 标准的 `BodyInit` 存在类型分歧，
 且该分歧**随 `@types/node` 版本变化**：
 
@@ -75,13 +80,30 @@ aliases: [CommApi 图像发送接口扩展]
 | `LaMDA-Module` | 22.10.6 | 可通过 |
 | `server` | 24.19.1 | **报错 TS2345** |
 
-`Blob` 属 Web 标准类型，不受 Node 类型版本影响，两个环境均成立。
-亦不可用 `as BodyInit` 断言绕过——项目规范禁止 `as` 收缩。
+`Blob` 属 Web 标准类型，不受 Node 类型版本影响。亦不可用 `as BodyInit` 断言绕过——项目规范禁止 `as` 收缩。
 
-**Blob 写法实测证据**（2026-10-12）：
-- 输入：96x48 真实 jxl（109 字节，由 `@jsquash/jxl` encoder 生成）
-- 输出：png 96x48，首像素 RGB `9,180,90`，与源 `10,180,90` 一致
-- 拦截计数：fetch 修补被触发 **1 次**，证明 wasm 加载确实走了 Blob 路径
+### 转换 worker 架构
+
+图像转换**不在主线程执行**，而是委派给常驻的 worker 线程。
+
+```
+MediaCache.transcode2png(input)
+        │  产物直接落盘, 不经内存传输
+        ▼
+ImageWorkerPool (主线程, 单例)  ──Bridge──▶  ImageWorkerClient (worker 线程)
+   src/Core/ImageWorkerPool.ts                src/Core/ImageWorkerClient.ts
+                                               ├─ patch globalThis.fetch (仅线程内)
+                                               ├─ @jsquash/jxl WASM 解码
+                                               └─ sharp 编码为 png
+```
+
+**采用 worker 的三点理由**：
+1. **隔离全局 patch** —— jxl 解码需改写 `globalThis.fetch`，在主线程做会污染整个进程
+2. **不阻塞主线程** —— sharp 与 wasm 装载耗时且占内存
+3. **适配落盘语义** —— 转换产物本就是磁盘文件，无需经主线程内存往返
+
+`ImageWorkerPool` 惰性启动、常驻复用；worker 意外退出时自动清空句柄，
+下次调用重新拉起。`ImageWorkerPool.close()` 可主动释放。
 
 > **教训**：验证类型正确性时不能只在本模块的 tsconfig 下跑 `tsc`。
 > 本模块 `@types/node` 为 22，而消费方 `server` 为 24，类型定义存在差异。
@@ -97,10 +119,13 @@ aliases: [CommApi 图像发送接口扩展]
 
 ## 验证
 
-- `tsc --noEmit` 零错误
+- `tsc --noEmit` 零错误（模块自身 `@types/node` 22 与 test-server 的 24 两套环境均通过）
 - `npm run compile` 编译通过
-- `MediaCache.transcode2png` 端到端实测：png/jpg/webp **及 jxl** 均成功产出 png，
-  缓存二次命中正常
+- `MediaCache.transcode2png` 端到端实测（使用编译产物 `dist/`）：
+  - 输入 96x48 真实 jxl（109 字节，`@jsquash/jxl` encoder 生成）
+  - 输出 png 96x48，首像素 RGB `9,180,90` vs 源 `10,180,90`（jxl 有损，符合预期）
+  - **主线程 `globalThis.fetch` 未被改动** —— worker 隔离生效
+  - 缓存二次命中正常
 
 ## 范围说明
 

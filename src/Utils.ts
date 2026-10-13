@@ -1,76 +1,7 @@
-import { UtilFT, UtilFunc } from '@zwa73/utils';
+import { UtilFT } from '@zwa73/utils';
 import path from 'pathe';
 import { FfmpegFlow } from '@zwa73/audio-utils';
-import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import sharp from 'sharp';
-
-/**jxl wasm解码函数 */
-type JxlDecodeFn = (data:ArrayBuffer|Uint8Array)=>Promise<ImageData>;
-
-/**jxl wasm是否已修补fetch */
-let jxlFetchPatched = false;
-/**修补fetch使其支持file://协议
- * Node原生fetch不支持file://, 而@jsquash加载wasm走该协议, 不修补会崩溃
- */
-const patchJxlFetch = ()=>{
-    if(jxlFetchPatched) return;
-    const originalFetch = globalThis.fetch;
-    globalThis.fetch = async (input:any, init?:any)=>{
-        const urlStr = input instanceof URL ? input.href : String(input);
-        if(urlStr.startsWith("file:")){
-            const buffer = await fs.readFile(fileURLToPath(urlStr));
-            // 必须用 Blob 包装而非直接传 Buffer:
-            // Buffer 类型为 Buffer<ArrayBufferLike>, 与 Web 标准的 BodyInit 存在分歧
-            // 且该分歧随 @types/node 版本变化 — LaMDA-Module 为 22(可通过),
-            // 而消费方 server 为 24(报错 TS2345). Blob 属 Web 标准类型, 不受该差异影响.
-            // 亦不可用 `as BodyInit` 断言, 项目规范禁止 as 收缩.
-            const blob = new Blob([new Uint8Array(buffer)], { type:"application/wasm" });
-            return new Response(blob, {
-                headers: { "Content-Type":"application/wasm" },
-            });
-        }
-        return originalFetch(input, init);
-    };
-    jxlFetchPatched = true;
-}
-
-/**图像转换工具
- * 纯转换, 不做任何格式推断, 是否转换由调用方决定
- */
-export class ImageConvert{
-    /**转换为 PNG
-     * jxl 因 libvips 未编入 libjxl 需走 @jsquash/jxl WASM 解码, 其余格式走 sharp 原生
-     * @param input  - 输入图像路径
-     * @param output - 输出 png 路径
-     * @async
-     */
-    static async convertToPng(input:string, output:string){
-        // JXL 单独走 WASM 解码
-        if(path.extname(input).toLowerCase() === '.jxl'){
-            patchJxlFetch();
-            const fileBuffer = await fs.readFile(input);
-            const decodeJxl = await UtilFunc.dynamicImport<JxlDecodeFn>("@jsquash/jxl/decode.js");
-            const image = await decodeJxl!(fileBuffer);
-
-            await sharp(Buffer.from(image.data.buffer), {
-                raw:{
-                    width   : image.width,
-                    height  : image.height,
-                    channels: 4,
-                },
-            })
-            .png()
-            .toFile(output);
-            return;
-        }
-
-        // 其余格式 sharp 原生处理
-        await sharp(input)
-            .png()
-            .toFile(output);
-    }
-}
+import { ImageWorkerPool } from './Core';
 
 export class MediaCache{
     static CACHE_PATH = "";
@@ -143,12 +74,13 @@ export class MediaCache{
 
     /** 转换为 PNG
      * 无条件转换, 不做格式判断
+     * 实际转换在 ImageWorkerPool 的常驻worker内完成, 避免全局fetch被patch污染主线程
      */
     static transcode2png = async (input: string) => {
         const {cachePath,hasCache} = await MediaCache.ensureCache('transcode2png','.png',input);
         if (hasCache) return cachePath;
 
-        await ImageConvert.convertToPng(input,cachePath);
+        await ImageWorkerPool.convertToPng(input,cachePath);
 
         return cachePath;
     };
