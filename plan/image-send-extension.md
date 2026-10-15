@@ -12,7 +12,7 @@ aliases: [CommApi 图像发送接口扩展]
 ## 目标
 
 为 `CommApiSendTool` 扩展 `sendImage` 能力，使调用方只需给出本地图片路径，
-由各平台适配器自行判断格式兼容性并在必要时转为 png。
+由各平台适配器自行判断格式兼容性，并在必要时转换后再发送。
 
 ## 设计决策
 
@@ -21,22 +21,41 @@ aliases: [CommApi 图像发送接口扩展]
 | 图像处理库 | **sharp** | 纯粹的图像库，与音频链路解耦 |
 | ffmpeg 的职责 | **仅音频**，不为图像扩展 | `FfmpegFlow` 的输入流硬编码为 `[0:a]`，本就是音频抽象 |
 | jxl 解码 | **`@jsquash/jxl` WASM** | sharp/libvips 0.35.5 未编入 libjxl，`format.jxl` 全能力为 false |
-| 转换工具归属 | `MediaCache.transcode2png` | **无条件转换**，不做任何格式推断 |
+| 转换工具归属 | `MediaCache.transcode2{webp,png}` | **无条件转换**，不做任何格式推断 |
 | 是否转换的判断 | **各平台适配器自行判断** | 各平台白名单不同，判断属于平台私事 |
 | 判断依据 | **文件扩展名** | 与 `ensureCache` 用 `path.parse().name` 生成缓存名的既有风格一致 |
 | 接口形状 | 单图 `imageFilePath: string` | 与 `sendVoice` 严格对称 |
+| **不做同格式平转** | 已是目标格式则直发 | png→png 这类转换纯属无效开销 |
 
 ## 各平台格式策略
 
-| 平台 | 支持格式 | 策略 |
+| 平台 | 策略 | 依据 |
 |---|---|---|
-| Telegram | jpg/jpeg/png/gif/webp | 不在列表内转 png |
-| Discord | webp/png/jpg/jpeg/gif | 不在列表内转 png，转码在主线程完成 |
-| KOOK | jpg/jpeg/png/gif | 不在列表内转 png |
-| OB11 ×3 | 规范无白名单，协议端不一 | **统一转 png**，使用 `CQCodeTool.fileImage` |
+| Telegram | **压 webp**（已是 webp 则直发） | 官方未限制格式，webp 可显著减小体积 |
+| Discord | **压 webp**（已是 webp 则直发） | `ALLOWED_EXTENSIONS` 含 webp |
+| KOOK | 白名单 `jpg/jpeg/png/gif` 直发，其余转 png | 官方文档明确仅支持 jpeg/gif/png |
+| OB11 ×3 | 白名单 `jpg/jpeg/png/gif` 直发，其余转 png | 规范无白名单，协议端不一 |
 
 > OB11 使用 `fileImage` 而非 `base64Image`：`fileImage` 与已在生产验证的 `fileRecord` 同构，
 > 而 `base64` 形式的支持与否取决于协议端是否实现，不可预测。
+
+### 为何不使用 PNG 调色板量化
+
+PNG 缩体积的唯一有效手段是 **调色板量化**（`palette: true`），单靠 zlib 无损压缩对照片几乎无效。
+但调色板会把图像压到 **256 色**，对渐变图像产生肉眼可见的**色带**，破坏严重，故不采用。
+
+实测（1200x800 照片类图像）：
+
+| 方式 | 体积 | 相对源 |
+|---|---|---|
+| 源 png | 2685 KB | 100% |
+| png 仅 zlib 无损 | 2682 KB | 99.9% ← 几乎无效 |
+| png 调色板 256 色 | 546 KB | 20.3% ← 但画质破坏 |
+
+因此 png 路径只做**无损编码**（`compressionLevel: 9`），仅用于「平台不支持原格式」的兜底。
+需要真正压体积时走 **webp**。
+
+> 注意：不可给 `png()` 传 `effort`——sharp 文档注明该参数会**隐式置 `palette: true`**。
 
 ## 实施内容
 
@@ -52,15 +71,16 @@ aliases: [CommApi 图像发送接口扩展]
 | 文件 | 改动 |
 |---|---|
 | `src/ChatPlantformInterface.ts` | 新增 `SendImageArg` 与 `CommApiSendTool.sendImage` |
-| `src/Utils.ts` | `MediaCache.transcode2png` 委派给 `ImageWorkerPool` |
-| `src/Core/ImageWorkerClient.ts` | **新增** worker 线程：fetch patch + jxl WASM + sharp |
+| `src/Utils.ts` | 新增 `MediaCache.transcode2webp` 与 `transcode2png`，均委派给 `ImageWorkerPool` |
+| `src/Core/ImageWorkerClient.ts` | **新增** worker 线程：fetch patch + jxl WASM 解码 + sharp 编码 |
 | `src/Core/ImageWorkerPool.ts` | **新增** 主线程常驻单例与 Bridge 管理 |
 | `src/Core/index.ts` | **新增** |
-| `src/Telegram/Telegram.ts` | `sendPhoto` + `fromPath` |
-| `src/Discord/Discord.ts` | 主线程判断与转码，桥接至 worker |
+| `src/Telegram/Telegram.ts` | 压 webp + `sendPhoto` + `fromPath` |
+| `src/Discord/Discord.ts` | 主线程压 webp，桥接至 worker |
 | `src/Discord/WorkerClient.ts` | `AttachmentBuilder` 发送 |
-| `src/KOOK/KOOK.ts` | `uploadMedia` + 卡片 `container > image` |
+| `src/KOOK/KOOK.ts` | 白名单判断 + `uploadMedia` + 卡片 `container > image` |
 | `src/OneBot/OneBot.ts` | `sendImage` 转发至 `ast` |
+| `src/OneBot/ActivateSendTool/Utils.ts` | **新增** `fixImagePath` 共享格式判断 |
 | `src/OneBot/ActivateSendTool/{QQ,KOOK,QQOfficial}.ts` | `fileImage` 发送 |
 | `src/Utils.ts` (顺带) | `AudioCache` 重命名为 `MediaCache`，混装音频与图像转换 |
 
@@ -87,15 +107,18 @@ aliases: [CommApi 图像发送接口扩展]
 图像转换**不在主线程执行**，而是委派给常驻的 worker 线程。
 
 ```
-MediaCache.transcode2png(input)
+MediaCache.transcode2{webp,png}(input)
         │  产物直接落盘, 不经内存传输
         ▼
 ImageWorkerPool (主线程, 单例)  ──Bridge──▶  ImageWorkerClient (worker 线程)
    src/Core/ImageWorkerPool.ts                src/Core/ImageWorkerClient.ts
                                                ├─ patch globalThis.fetch (仅线程内)
-                                               ├─ @jsquash/jxl WASM 解码
-                                               └─ sharp 编码为 png
+                                               ├─ @jsquash/jxl WASM 解码 (仅 jxl 输入)
+                                               └─ sharp 编码为 webp / png
 ```
+
+`loadImage` 负责解码：非 jxl 交给 sharp 直接读取，jxl 先经 WASM 解码为原始像素再交给 sharp。
+两种目标格式（`convertToPng` / `convertToWebp`）共用该解码入口。
 
 **采用 worker 的三点理由**：
 1. **隔离全局 patch** —— jxl 解码需改写 `globalThis.fetch`，在主线程做会污染整个进程
@@ -104,6 +127,9 @@ ImageWorkerPool (主线程, 单例)  ──Bridge──▶  ImageWorkerClient (w
 
 `ImageWorkerPool` 惰性启动、常驻复用；worker 意外退出时自动清空句柄，
 下次调用重新拉起。`ImageWorkerPool.close()` 可主动释放。
+
+**`close()` 的细节**：`worker.terminate()` 会以**非零码**结束——这是 Node 的正常行为，
+但会被 `exit` 监听误报为「异常退出」。故关闭前置 `closing` 标记加以区分。
 
 > **教训**：验证类型正确性时不能只在本模块的 tsconfig 下跑 `tsc`。
 > 本模块 `@types/node` 为 22，而消费方 `server` 为 24，类型定义存在差异。
@@ -121,16 +147,21 @@ ImageWorkerPool (主线程, 单例)  ──Bridge──▶  ImageWorkerClient (w
 
 - `tsc --noEmit` 零错误（模块自身 `@types/node` 22 与 test-server 的 24 两套环境均通过）
 - `npm run compile` 编译通过
-- `MediaCache.transcode2png` 端到端实测（使用编译产物 `dist/`）：
-  - 输入 96x48 真实 jxl（109 字节，`@jsquash/jxl` encoder 生成）
-  - 输出 png 96x48，首像素 RGB `9,180,90` vs 源 `10,180,90`（jxl 有损，符合预期）
+- 端到端实测（使用编译产物 `dist/`，经 worker 线程转换）：
+  - **jxl 解码**：400x300 真实 jxl（由 `@jsquash/jxl` encoder 生成）→ webp / png，
+    首像素 RGB 与源完全一致（`60,60,200`）
+  - **webp 压缩**：1000x700 照片类 png 284.9 KB → webp 108.6 KB（**38.1%**）
+  - **png 兜底**：同图转 png 为无损编码，体积基本持平（不启用调色板量化）
   - **主线程 `globalThis.fetch` 未被改动** —— worker 隔离生效
   - 缓存二次命中正常
 
 ## 范围说明
 
-本次**不打通下游**，`server/` 侧未做任何改动。
-`AdminServerHandler` 中手工对齐 `CommApiSendTool` 的 `sender` 对象后续需补 `sendImage`。
+`CommApi-Manager` 侧已完成。
+`test-server` 的 Admin 链路已同步补上 `sendImage`：
+`AdminServerHandler.sender` 转发至 `bridge.onImage`，`AdminClient.onImage` 打印图片路径。
+
+`server/`（小规模生产环境）尚未同步，其 `AdminServerHandler` 同样需补 `sendImage`。
 
 ## 已知事项
 

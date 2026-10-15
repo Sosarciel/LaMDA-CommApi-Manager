@@ -176,11 +176,10 @@ export class TelegramApi extends CommApiListenToolBase implements CommApiInterfa
             const { imageFilePath, userId } = arg;
             const fixuid = unwarpId(userId)!;
 
-            // 不在支持列表内的格式转为 png
-            const ext = path.extname(imageFilePath).toLowerCase();
-            const sendPath = SUPPORTED_IMG_EXT.includes(ext)
+            // Telegram 支持 webp, 统一压缩为 webp; 已是 webp 则免去无意义的重复编码
+            const sendPath = path.extname(imageFilePath).toLowerCase() === '.webp'
                 ? imageFilePath
-                : await MediaCache.transcode2png(imageFilePath);
+                : await MediaCache.transcode2webp(imageFilePath);
 
             // v2 上传本地磁盘文件需使用 fromPath 包装
             await this.bot.api.sendPhoto({

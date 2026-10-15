@@ -1,6 +1,6 @@
 import { SendMessageArg, CommApiSendTool, SendVoiceArg, SendImageArg } from "@/src/ChatPlantformInterface";
 import { CQCodeTool, OneBotSender } from "@sosraciel-lamda/onebot11-protoclient";
-import { chkType } from "./Utils";
+import { chkType, fixImagePath } from "./Utils";
 import { match, sleep, SLogger, UtilFT } from "@zwa73/utils";
 import { MediaCache } from "@/src/Utils";
 import fs from 'fs';
@@ -60,8 +60,8 @@ export const KookActiveSendToolCtor = (port:number):CommApiSendTool=>{
             const { channelId, imageFilePath } = params;
 
             const notCQ = false;
-            // 协议端图片格式支持不一, 统一转 png
-            const pngpath = await MediaCache.transcode2png(imageFilePath);
+            // 支持列表内直发原文件, 其余转 png
+            const pngpath = await fixImagePath(imageFilePath);
             const imageCQ = CQCodeTool.fileImage(pngpath);
             const nChannelId = parseInt(channelId);
             await match(chkType(params),{

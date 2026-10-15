@@ -84,6 +84,19 @@ export class MediaCache{
 
         return cachePath;
     };
+
+    /** 转换为 WEBP
+     * 无条件转换, 不做格式判断
+     * 实际转换在 ImageWorkerPool 的常驻worker内完成
+     */
+    static transcode2webp = async (input: string) => {
+        const {cachePath,hasCache} = await MediaCache.ensureCache('transcode2webp','.webp',input);
+        if (hasCache) return cachePath;
+
+        await ImageWorkerPool.convertToWebp(input,cachePath);
+
+        return cachePath;
+    };
 }
 
 export type  InjectData = Partial<{

@@ -160,7 +160,7 @@ export class KOOKApi extends CommApiListenToolBase implements CommApiInterface{
     async sendImage(arg:SendImageArg){
         const {channelId,userId,imageFilePath} = arg;
 
-        // 不在支持列表内的格式转为 png
+        // 支持列表内直接发送, 其余转 png (避免同格式平转)
         const ext = path.extname(imageFilePath).toLowerCase();
         const sendPath = SUPPORTED_IMG_EXT.includes(ext)
             ? imageFilePath

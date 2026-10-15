@@ -61,6 +61,17 @@ export class ImageWorkerPool{
         return await bridge.convertToPng({ input, output });
     }
 
+    /**将图像转换为 WEBP
+     * @param input  - 输入图像路径
+     * @param output - 输出 webp 路径
+     * @returns 是否转换成功
+     * @async
+     */
+    static async convertToWebp(input:string, output:string):Promise<boolean>{
+        const bridge = ImageWorkerPool.start();
+        return await bridge.convertToWebp({ input, output });
+    }
+
     /**关闭worker 释放资源 */
     static async close(){
         const worker = ImageWorkerPool.worker;

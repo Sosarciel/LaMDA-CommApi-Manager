@@ -1,7 +1,7 @@
 import { UtilFunc, match } from "@zwa73/utils";
 import { OneBotSender, CQCodeTool } from "@sosraciel-lamda/onebot11-protoclient";
 import { FfmpegTool } from "@zwa73/audio-utils";
-import { chkType } from "./Utils";
+import { chkType, fixImagePath } from "./Utils";
 import { SendMessageArg, SendVoiceArg, SendImageArg, CommApiSendTool } from "@/src/ChatPlantformInterface";
 import { MediaCache } from "@/src/Utils";
 import { TextClipper, TextFormatter } from "@sosraciel-lamda/text-processor";
@@ -94,8 +94,8 @@ export const QQActiveSendToolCtor = (port:number):CommApiSendTool=>{
 
             const notCQ = false;
             const nChannelId = parseInt(channelId);
-            // 协议端图片格式支持不一, 统一转 png
-            const pngpath = await MediaCache.transcode2png(imageFilePath);
+            // 支持列表内直发原文件, 其余转 png
+            const pngpath = await fixImagePath(imageFilePath);
             const imageCQ = CQCodeTool.fileImage(pngpath);
             await match(chkType(params),{
                 "group_message":async ()=>{

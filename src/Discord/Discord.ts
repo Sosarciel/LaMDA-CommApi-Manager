@@ -148,11 +148,11 @@ export class DiscordApi extends CommApiListenToolBase implements CommApiInterfac
         })??false;
     }
     async sendImage(arg: SendImageArg){
-        // 不在支持列表内的格式转为 png (转码在主线程完成, worker 只负责发送)
-        const ext = path.extname(arg.imageFilePath).toLowerCase();
-        const sendPath = SUPPORTED_IMG_EXT.includes(ext)
+        // Discord 支持 webp, 统一压缩为 webp; 已是 webp 则免去无意义的重复编码
+        // 转码在主线程完成, worker 只负责发送
+        const sendPath = path.extname(arg.imageFilePath).toLowerCase() === '.webp'
             ? arg.imageFilePath
-            : await MediaCache.transcode2png(arg.imageFilePath);
+            : await MediaCache.transcode2webp(arg.imageFilePath);
         return this.bridge?.sendImage({...arg,
             userId      : unwarpId(arg.userId)!,
             channelId   : unwarpId(arg.channelId)!,
