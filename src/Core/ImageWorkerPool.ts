@@ -28,8 +28,15 @@ export class ImageWorkerPool{
         const worker = new Worker(path.join(__dirname,'ImageWorkerClient.js'));
         ImageWorkerPool.worker = worker;
         ImageWorkerPool.bridge = Bridge.create<ImageWorkerInterface>({
-            needAccept: true,
-            acceptedRetry: 0,
+            // 不启用 needAccept: 单段模式直接等待 resolve, 无需 accept 握手
+            // timeout 放宽到10分钟以覆盖耗时的转换本体:
+            // 实测 jxl 的 WASM 解码为同步操作, 解码 2200x1600 图耗时约1.5s
+            // 且期间事件循环完全阻塞(心跳0次), 大图或多图排队会更久
+            // retry:0 不做重发: 转换是有副作用的操作(重复解码并覆写产物),
+            // 且默认的1秒超远不足以覆盖转换, 会导致worker重复执行并回报
+            // 重复的 resolve, 即日志中的"桥接收到重复的 response"
+            timeout: 600_000,
+            retry  : 0,
             client:{},
             send:(data)=>worker.postMessage(data),
             init:(onData)=>worker.on('message',onData),
